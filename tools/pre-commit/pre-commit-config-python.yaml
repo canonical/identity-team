@@ -1,0 +1,61 @@
+repos:
+# Official pre-commit out-of-box hooks
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.6.0
+  hooks:
+    - id: check-added-large-files
+    - id: debug-statements
+    - id: detect-private-key
+    - id: end-of-file-fixer
+    - id: requirements-txt-fixer
+    - id: trailing-whitespace
+# Check misspelled words in source code
+# Configuration specified in pyproject.toml
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.3.0
+  hooks:
+  - id: codespell
+    additional_dependencies:
+      - tomli # required for Python < 3.11 see https://github.com/codespell-project/codespell?tab=readme-ov-file#using-a-config-file
+# Sort imports alphabetically and logically
+# Configuration specified in pyproject.toml
+- repo: https://github.com/pycqa/isort
+  rev: 5.13.2
+  hooks:
+    - id: isort
+      name: isort (python)
+# Python linter and formatter
+# Configuration specified in pyproject.toml
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.4.1
+  hooks:
+    - id: ruff
+      args: [--fix, --exit-non-zero-on-fix]
+    - id: ruff-format
+# Static type checker
+# Configuration specified in pyproject.toml
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.10.0
+  hooks:
+    - id: mypy
+      args: ["--config-file", "pyproject.toml"]
+      additional_dependencies: # additional typed dependencies; add more if needed
+        - types-PyYAML
+# Commit messages checker
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v3.2.0
+  hooks:
+    - id: conventional-pre-commit
+      stages: [commit-msg]
+      args: [--strict]
+# Documentation linter
+# Configuration specified in .markdownlint.yaml in each repository
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.41.0
+  hooks:
+  - id: markdownlint
+# Renovate configuration validator
+- repo: https://github.com/renovatebot/pre-commit-hooks
+  rev: 37.381.2
+  hooks:
+    - id: renovate-config-validator
