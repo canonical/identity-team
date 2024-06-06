@@ -1,0 +1,22 @@
+name: Quality Checks
+
+on:
+  workflow_call:
+
+jobs:
+  linting:
+    name: Linting
+    uses: ./.github/workflows/_charm-linting.yaml@main
+
+  unit-test:
+    name: Unit Tests
+    uses: ./.github/workflows/_charm-tests-unit.yaml@main
+    needs:
+      - linting
+
+  integration-test:
+    name: Integration Tests
+    uses: ./.github/workflows/_charm-tests-integration.yaml@main
+    needs:
+      - linting
+      - unit-test

@@ -1,0 +1,31 @@
+name: Unit Tests
+
+on:
+  workflow_call:
+
+jobs:
+  integration-test:
+    name: Integration Tests (microk8s)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup operator environment (microk8s)
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          juju-channel: 3.4/stable
+          provider: microk8s
+          channel: 1.28-strict/stable
+          bootstrap-options: '--agent-version=3.4.0'
+
+      - name: Run integration tests
+        run: tox -e integration -- --model testing
+
+      - name: Get contexts
+        run: kubectl config view
+        if: failure()
+
+      - name: Dump logs
+        if: failure()
+        uses: canonical/charming-actions/dump-logs@main

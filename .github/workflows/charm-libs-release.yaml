@@ -1,0 +1,20 @@
+name: Release Charm Libraries
+
+on:
+  workflow_call:
+
+jobs:
+  release-libs:
+    name: Release Charm Libraries
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Release bumped charm library
+        uses: canonical/charming-actions/release-libraries@main
+        with:
+          credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
