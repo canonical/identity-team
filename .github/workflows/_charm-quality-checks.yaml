@@ -6,17 +6,17 @@ on:
 jobs:
   linting:
     name: Linting
-    uses: ./.github/workflows/_charm-linting.yaml@main
+    uses: ./.github/workflows/_charm-linting.yaml
 
   unit-test:
     name: Unit Tests
-    uses: ./.github/workflows/_charm-tests-unit.yaml@main
+    uses: ./.github/workflows/_charm-tests-unit.yaml
     needs:
       - linting
 
   integration-test:
     name: Integration Tests
-    uses: ./.github/workflows/_charm-tests-integration.yaml@main
+    uses: ./.github/workflows/_charm-tests-integration.yaml
     needs:
       - linting
       - unit-test

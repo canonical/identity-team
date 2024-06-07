@@ -23,8 +23,8 @@ jobs:
         run: tox -e integration -- --model testing
 
       - name: Get contexts
-        run: kubectl config view
         if: failure()
+        run: kubectl config view
 
       - name: Dump logs
         if: failure()

@@ -1,4 +1,4 @@
-name: Release Charm Workflow
+name: Charm Release Workflow
 
 on:
   workflow_call:
@@ -6,11 +6,11 @@ on:
 jobs:
   quality-checks:
     name: Quality Checks
-    uses: ./.github/workflows/_charm-quality-checks.yaml@main
+    uses: ./.github/workflows/_charm-quality-checks.yaml
 
   release-charm:
     name: Release Charm
     needs:
       - quality-checks
-    uses: ./.github/workflows/_charm-release.yaml@main
+    uses: ./.github/workflows/_charm-release.yaml
     secrets: inherit

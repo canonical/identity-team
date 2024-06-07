@@ -1,4 +1,4 @@
-name: Release Charm to Other Tracks and Channels
+name: Promote Charm to Other Channel
 
 on:
   workflow_call:

@@ -6,4 +6,4 @@ on:
 jobs:
   quality-checks:
     name: Quality Checks
-    uses: ./.github/workflows/_charm-quality-checks.yaml@main
+    uses: ./.github/workflows/_charm-quality-checks.yaml
