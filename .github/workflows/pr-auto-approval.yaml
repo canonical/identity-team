@@ -4,9 +4,9 @@ on:
   workflow_call:
     inputs:
       auto-merge-branch-prefix:
-        description: "The Prefix of Branch to be Auto Merged"
+        description: 'The Prefix of Branch to be Auto Merged'
         type: string
-        default: "renovate/auto-"
+        default: 'renovate/auto-'
         required: false
     secrets:
       PAT_TOKEN:

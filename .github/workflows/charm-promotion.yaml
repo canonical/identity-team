@@ -4,18 +4,18 @@ on:
   workflow_call:
     inputs:
       origin-channel:
-        description: "Origin Channel"
+        description: 'Origin Channel'
         type: string
         required: true
       destination-channel:
-        description: "Destination Channel"
+        description: 'Destination Channel'
         type: string
         required: true
       base-channel:
-        description: "Charmcraft Base Channel"
+        description: 'Charmcraft Base Channel'
         required: false
         type: string
-        default: "22.04"
+        default: '22.04'
 
 jobs:
   promote-charm:

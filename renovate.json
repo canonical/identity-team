@@ -34,7 +34,7 @@
     {
       "groupName": "pre-commit hooks",
       "matchManagers": ["pre-commit"],
-      "matchUpdateTypes": ["major", "minor", "patch"],
+      "matchUpdateTypes": ["major", "minor"],
       "automerge": true,
       "schedule": ["at any time"],
       "additionalBranchPrefix": "auto-"

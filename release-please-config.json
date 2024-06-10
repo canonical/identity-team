@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "simple",
+  "pull-request-title-pattern": "ci: release ${version}",
+  "packages": {
+    ".": {
+      "package-name": "identity-hall"
+    }
+  }
+}
