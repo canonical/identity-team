@@ -1,0 +1,29 @@
+name: Release rock Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Lint
+    uses: ./.github/workflows/_rock-linting.yaml
+
+  build:
+    name: Build
+    needs:
+      - lint
+    uses: ./.github/workflows/_rock-build.yaml
+
+  publish:
+    name: Publish
+    if: ${{ (github.ref == 'refs/heads/main') || (github.ref_type == 'tag') }}
+    needs:
+      - build
+    uses: ./.github/workflows/_rock-publish.yaml
+
+  scan:
+    name: Scan
+    if: ${{ (github.ref == 'refs/heads/main') || (github.ref_type == 'tag') }}
+    needs:
+      - publish
+    uses: ./.github/workflows/_rock-scan.yaml

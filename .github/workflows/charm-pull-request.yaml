@@ -1,0 +1,9 @@
+name: Pull Request Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  quality-checks:
+    name: Quality Checks
+    uses: ./.github/workflows/_charm-quality-checks.yaml

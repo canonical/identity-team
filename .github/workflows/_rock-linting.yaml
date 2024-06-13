@@ -1,0 +1,20 @@
+name: Lint rockcraft.yaml
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: |
+          python3 -m pip install yamllint
+
+      - name: YAML linting
+        run: |
+          yamllint --no-warnings rockcraft.yaml

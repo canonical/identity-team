@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":disableDependencyDashboard",
+    ":automergeDigest",
+    ":automergePatch",
+    ":automergeMinor",
+    ":rebaseStalePrs",
+    ":semanticCommits",
+    ":semanticCommitScope(deps)",
+    "helpers:pinGitHubActionDigests",
+    ":enablePreCommit"
+  ],
+  "automergeType": "pr",
+  "rebaseWhen": "behind-base-branch",
+  "packageRules": [
+    {
+      "groupName": "github actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["major", "minor", "patch", "digest", "pinDigest"],
+      "automerge": true,
+      "schedule": ["at any time"],
+      "additionalBranchPrefix": "auto-"
+    },
+    {
+      "groupName": "renovate packages",
+      "matchSourceUrlPrefixes": ["https://github.com/renovatebot/"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest"],
+      "automerge": true,
+      "schedule": ["at any time"],
+      "additionalBranchPrefix": "auto-"
+    },
+    {
+      "groupName": "pre-commit hooks",
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": ["major", "minor"],
+      "automerge": true,
+      "schedule": ["at any time"],
+      "additionalBranchPrefix": "auto-"
+    }
+  ]
+}

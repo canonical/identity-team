@@ -1,0 +1,7 @@
+.tox/
+
+.idea/
+
+.vscode/*
+.history/
+*.vsix

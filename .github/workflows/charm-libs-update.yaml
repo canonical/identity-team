@@ -1,0 +1,40 @@
+name: Update Charm Dependent Libraries by Opening Pull Request
+
+on:
+  workflow_call:
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: true
+      PAT_TOKEN:
+        required: true
+
+jobs:
+  update-libs:
+    name: Update Charm Dependent Libraries
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install charmcraft
+        run: |
+          sudo snap install charmcraft --channel latest/candidate --classic
+
+      - name: Update charm dependent libraries
+        run: charmcraft fetch-lib
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+
+      - name: Create pull request
+        id: create-pull-request
+        uses: canonical/create-pull-request@main
+        with:
+          github-token: ${{ secrets.PAT_TOKEN }}
+          commit-message: Update charm dependent libs
+          branch-name: 'automated-update-charm-libs'
+          title: (Automated) Update Charm Dependent Libs
+          body: Update charm dependent libraries
+          upsert: true
+          ignore-no-changes: true
