@@ -21,8 +21,3 @@ repos:
   rev: v0.40.0
   hooks:
   - id: markdownlint
-# Renovate configuration validator
-- repo: https://github.com/renovatebot/pre-commit-hooks
-  rev: 37.381.2
-  hooks:
-    - id: renovate-config-validator
