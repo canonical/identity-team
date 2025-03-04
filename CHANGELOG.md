@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/canonical/identity-team/compare/v1.4.0...v1.4.1) (2025-03-04)
+
+
+### Bug Fixes
+
+* use jq to parse git tag ([2490314](https://github.com/canonical/identity-team/commit/2490314a9662a42a7227fee48e3b81da773abfa0))
+
 ## [1.4.0](https://github.com/canonical/identity-team/compare/v1.3.0...v1.4.0) (2025-03-04)
 
 
