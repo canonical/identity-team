@@ -23,8 +23,6 @@ on:
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: true
-      GITHUB_TOKEN:
-        required: true        
 
 jobs:
   check:
