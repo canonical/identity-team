@@ -38,16 +38,16 @@ jobs:
       - name: Get current branch
         id: check_step
         run: |
-          raw=$(git branch -r --contains ${{ github.ref }})
-          echo $raw
-          track=${raw##*/}
+          sudo snap install jq --channel latest/edge 
+    
+          track=$(echo ${{ github.ref }} | jq -R | jq 'split("-")[0]' | jq 'sub("refs/tags/"; "")' | jq 'split("/")[1]')
           echo "track=$track" >> $GITHUB_OUTPUT
           echo "Track is $track."  
       - name: Get channel 
-        if: ${{ steps.check_step.outputs.track == 'main'}}
+        if: ${{ steps.check_step.outputs.track == 'null'}}
         run: echo "channel=latest/edge" >> $GITHUB_ENV
       - name: Get channel 
-        if: ${{ steps.check_step.outputs.track != 'main'}}
+        if: ${{ steps.check_step.outputs.track != 'null'}}
         run: echo "channel=${{ steps.check_step.outputs.track }}/edge" >> $GITHUB_ENV
       - name: Export channel
         id: export
