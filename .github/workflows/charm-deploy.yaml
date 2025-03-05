@@ -4,12 +4,22 @@ run-name: Deploy ${{ inputs.channel }} rev ${{ inputs.revision}} to ${{ inputs.m
 on:
   workflow_call:
     inputs:
+        application:
+            type: string
+            required: true
         model:
             type: string
+            required: true
         revision:
             type: string
+            required: true
         channel:
-          type: string
+            type: string
+            required: true
+        tf-folder:
+            type: string
+            default: "./deployment"
+            required: false
     secrets:
         CLIENT_ID:
             required: true
@@ -34,22 +44,22 @@ jobs:
           echo "TF_VAR_client_secret=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
           echo "TF_VAR_jimm_url=${{ secrets.JIMM_URL }}" >> $GITHUB_ENV
       - name: Import application into state if present
-        working-directory: ./deployment
+        working-directory: ${{ inputs.tf-folder }}
         run: |
           terraform init
-          terraform import juju_application.application ${{ inputs.model}}:admin-ui || true
+          terraform import juju_application.application ${{ inputs.model}}:${{ inputs.application }} || true
         env:
           TF_VAR_model: ${{ inputs.model }}
           TF_VAR_revision: ${{ inputs.revision }}
           TF_VAR_channel: ${{ inputs.channel }}
-          TF_VAR_application_name: "admin-ui"
+          TF_VAR_application_name: "${{ inputs.application }}"
           
       - name: Deploy
-        working-directory: ./deployment
+        working-directory: ${{ inputs.tf-folder }}
         run: |
           terraform apply --auto-approve
         env:
           TF_VAR_model: ${{ inputs.model }}
           TF_VAR_revision: ${{ inputs.revision }}
           TF_VAR_channel: ${{ inputs.channel }}
-          TF_VAR_application_name: "admin-ui"
+          TF_VAR_application_name: "${{ inputs.application }}"
