@@ -6,7 +6,7 @@ on:
 jobs:
   publish:
     name: Publish
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
           sudo snap install yq
 
       - name: Download rock
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4
         with:
           name: rock
 
