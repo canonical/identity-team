@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/canonical/identity-team/compare/v1.4.1...v1.4.2) (2025-03-05)
+
+
+### Bug Fixes
+
+* add inputs for charm-deployment ([b56d179](https://github.com/canonical/identity-team/commit/b56d179019ac4d51529092bce579463c271eb608))
+
 ## [1.4.1](https://github.com/canonical/identity-team/compare/v1.4.0...v1.4.1) (2025-03-04)
 
 
