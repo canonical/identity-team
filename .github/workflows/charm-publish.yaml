@@ -92,6 +92,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
             name: ${{ needs.build.outputs.artifacts-key }}
+      - name: Check downloaded files
+        run: |
+          echo ::debug::check directory
+          ls -la
+          pwd
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
@@ -99,6 +104,17 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           destructive-mode: false
-          built-charm-path: ${{ needs.build.outputs.paths}}
+          built-charm-path: ${{ needs.build.outputs.charm-paths}}
           github-tag: false  
+      - name: Upload charms to release
+        run: |
+          echo charm-files=$(echo ${{ needs.build.outputs.charm-paths}} | jq '. | sub(","; " ")') >> $GITHUB_ENV
+          gh release upload ${{ github.ref_name}} $charm-files
 
+  scan:
+    needs: build
+    uses: ./.github/workflows/_secscan.yaml
+    with:
+      artifacts-format: charm
+      artifacts-key: ${{ needs.build.outputs.artifacts-key }} 
+      artifact-paths: ${{ needs.build.outputs.charm-paths }} 
