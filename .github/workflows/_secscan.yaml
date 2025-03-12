@@ -1,0 +1,52 @@
+name: secscan
+on:
+  workflow_call:
+    inputs:
+      artifacts-type:
+        description: Type of the artifacts, parameter to be used by secscan type modifier
+        required: false
+        default: package
+        type: string
+      artifacts-format:
+        description: Format of the artifacts, parameter to be used by secscan format modifier
+        required: true
+        type: string
+      artifacts-key:
+        description: Key where the artifacts have been uploaded.
+        required: true
+        type: string
+      artifact-paths:
+        description: Paths where the artifact have been uploaded. String formatted as a JSON array
+        required: true
+        type: string
+jobs:
+  inputs-vetting:
+    runs-on: ubuntu-latest
+    outputs:
+      paths: ${{ steps.parse.outputs.paths }}
+    steps:
+      - id: parse
+        run: echo paths=$(echo ${{inputs.artifact-paths }} | jq -R -r '. | split(",")') >> $GITHUB_OUTPUT
+  secscan:
+    needs: inputs-vetting
+    strategy:
+      matrix:
+        artifact: ${{ fromJson(needs.inputs-vetting.outputs.paths) }}
+    runs-on: [self-hosted, self-hosted-linux-amd64-jammy-private-endpoint-medium]
+    steps:
+      - name: Install secscan cli
+        run: |
+          sudo snap install canonical-secscan-client
+          sudo snap connect canonical-secscan-client:home system:home
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifacts-key }}
+      - name: Run secscan
+        id: secscan
+        continue-on-error: true
+        run: secscan-client --batch submit --scanner trivy --type ${{ inputs.artifacts-type }} --format ${{ inputs.artifacts-format }} ${{ matrix.artifact }} --wait-and-print
+      - name: Create issue
+        if: steps.secscan.outcome != 'success'
+        run: gh issue create -R ${{ github.repository }} --label bug --title "Release compromised by CVE" --body "please check results of job ${{ job.id}}"
+        # enhance the above with actions/github-script@v7
