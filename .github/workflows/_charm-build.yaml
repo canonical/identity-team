@@ -1,0 +1,73 @@
+name: build-charm
+on:
+  workflow_call:
+    inputs:
+      use-charmcraftcache:
+        description: Enable usage of charmcraftcache
+        required: false
+        default: false
+        type: boolean
+      charmcraft-channel:
+        description: Snap channel for charmcraft
+        required: false
+        default: latest/stable
+        type: string
+    outputs:
+      name:
+        description: The charm name
+        value: ${{ jobs.build.outputs.name }}
+      platforms:
+        description: The platforms for which the charm has been built
+        value: ${{ jobs.build.outputs.platforms }}
+      charm-paths:
+        description: The paths to all the charms built
+        value: ${{ jobs.build.outputs.paths }}
+      artifacts-key:
+        description: Key used to upload all the charm artifacts
+        value: ${{ jobs.build.outputs.artifacts }}
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.get-charm-info.outputs.charm-name }}
+      platforms: ${{ steps.get-charm-info.outputs.charm-platforms }}
+      paths: ${{ steps.get-charm-paths.outputs.charm-paths }}
+      artifacts: ${{ github.ref_name }}-${{ github.job }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+      - name: Setup lxd
+        uses: canonical/setup-lxd@v0.1.2
+        with:
+          channel: latest/stable
+      - name: Install charmcraft
+        run: |
+          sudo snap install charmcraft --classic --channel ${{ inputs.charmcraft-channel }}
+          echo CHARMCRAFT_BIN=charmcraft >> $GITHUB_ENV
+      - name: Install charmcraftcache
+        if: ${{ inputs.use-charmcraftcache }}
+        run: |
+          pipx install charmcraftcache
+          echo CHARMCRAFT_BIN=ccc >> $GITHUB_ENV
+      - name: Build charm
+        run: ${{ env.CHARMCRAFT_BIN}} pack -v
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+      - name: Get charm info
+        id: get-charm-info
+        run: |
+          echo charm-name=$(cat charmcraft.yaml | yq '.name') >> $GITHUB_OUTPUT
+          echo charm-platforms=$(cat charmcraft.yaml | yq '.platforms | keys | tojson') >> $GITHUB_OUTPUT
+      - name: Get charm paths
+        id: get-charm-paths
+        run: |
+          echo charm-paths=$(echo '${{ steps.get-charm-info.outputs.charm-platforms }}' | jq -r --arg charm ${{ steps.get-charm-info.outputs.charm-name }} '.[] |= split(":") | .[] |= join("-", .) | map($charm + "_" + . + ".charm") | join(",")') >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.ref_name }}-${{ github.job }}
+          path: ${{ github.workspace }}/*.charm
