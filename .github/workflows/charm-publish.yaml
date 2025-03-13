@@ -12,19 +12,19 @@ on:
           description: Github branch from this repo to publish.  If blank, will use the default branch
           required: false
           default: ''
-          type: string   
+          type: string
         use-charmcraftcache:
           description: Enable usage of charmcraftcache
           required: false
           default: false
-          type: boolean           
+          type: boolean
     outputs:
         channel:
           description: "The release channel"
           value: ${{ jobs.publish-charm.outputs.channel }}
         track:
           description: "The charm track"
-          value: ${{ jobs.check.outputs.track }}    
+          value: ${{ jobs.check.outputs.track }}
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: true
@@ -43,15 +43,15 @@ jobs:
       - name: Get current branch
         id: check_step
         run: |
-          sudo snap install jq --channel latest/edge 
-    
+          sudo snap install jq --channel latest/edge
+
           track=$(echo ${{ github.ref }} | jq -R | jq 'split("-")[0]' | jq 'sub("refs/tags/"; "")' | jq 'split("/")[1]')
           echo "track=$track" >> $GITHUB_OUTPUT
-          echo "Track is $track."  
-      - name: Get channel 
+          echo "Track is $track."
+      - name: Get channel
         if: ${{ steps.check_step.outputs.track == 'null'}}
         run: echo "channel=latest/edge" >> $GITHUB_ENV
-      - name: Get channel 
+      - name: Get channel
         if: ${{ steps.check_step.outputs.track != 'null'}}
         run: echo "channel=${{ steps.check_step.outputs.track }}/edge" >> $GITHUB_ENV
       - name: Export channel
@@ -64,12 +64,12 @@ jobs:
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
     secrets:
-      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}            
-  
+      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-24.04
-    needs: 
+    needs:
         - build
         - check
     outputs:
@@ -95,6 +95,7 @@ jobs:
       - name: Check downloaded files
         run: |
           echo ::debug::check directory
+          mv ${{ needs.build.outputs.charm-paths}} charm.charm
           ls -la
           pwd
       - name: Upload charm to charmhub
@@ -104,8 +105,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           destructive-mode: false
-          built-charm-path: ${{ needs.build.outputs.charm-paths}}
-          github-tag: false  
+          built-charm-path: ${{ github.workspace }}/charm.charm
+          github-tag: false
       - name: Upload charms to release
         run: |
           echo charm-files=$(echo ${{ needs.build.outputs.charm-paths}} | jq '. | sub(","; " ")') >> $GITHUB_ENV
@@ -116,5 +117,5 @@ jobs:
     uses: ./.github/workflows/_secscan.yaml
     with:
       artifacts-format: charm
-      artifacts-key: ${{ needs.build.outputs.artifacts-key }} 
-      artifact-paths: ${{ needs.build.outputs.charm-paths }} 
+      artifacts-key: ${{ needs.build.outputs.artifacts-key }}
+      artifact-paths: ${{ needs.build.outputs.charm-paths }}
