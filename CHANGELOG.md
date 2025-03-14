@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.5.0](https://github.com/canonical/identity-team/compare/v1.4.2...v1.5.0) (2025-03-14)
+
+
+### Features
+
+* add charm build reusable workflow ([dfe91f1](https://github.com/canonical/identity-team/commit/dfe91f156c87b8ff6dc5e9ada5dae9cbde54faf5))
+* add secscan reusable workflow ([a0c45ad](https://github.com/canonical/identity-team/commit/a0c45adf4760d880cc5472523a7262afe67ba72b))
+* hook up secscan on charm publish ([c0b2f0a](https://github.com/canonical/identity-team/commit/c0b2f0a31b57b7546ac93f2da092acbffed2ce7d))
+* use build workflow instead of upload-charm build ([bd17a3c](https://github.com/canonical/identity-team/commit/bd17a3c05f66c99886f9be64c0fe6fd382a23c62))
+
+
+### Bug Fixes
+
+* do no add tag and release on charm upload ([ebd4b1d](https://github.com/canonical/identity-team/commit/ebd4b1d3ee44eae6e6dff0b82b2fc938e7fdf113))
+* use gh token for secscan issue creation ([0f8ae85](https://github.com/canonical/identity-team/commit/0f8ae853fe12034450d37681e348e6ab54fdab0b))
+* use gh token for secscan issue creation ([c81ed96](https://github.com/canonical/identity-team/commit/c81ed961dd271bd7c79be2970dc0425efb7cfde3))
+
 ## [1.4.2](https://github.com/canonical/identity-team/compare/v1.4.1...v1.4.2) (2025-03-05)
 
 
