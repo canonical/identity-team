@@ -1,29 +1,32 @@
 name: Release Charm to Edge Risk Level
-
 on:
   workflow_call:
     inputs:
-        destination_channel:
-          description: CharmHub channel to publish to
-          required: false
-          default: 'latest/edge'
-          type: string
-        source_branch:
-          description: Github branch from this repo to publish.  If blank, will use the default branch
-          required: false
-          default: ''
-          type: string    
+      destination_channel:
+        description: CharmHub channel to publish to
+        required: false
+        default: 'latest/edge'
+        type: string
+      source_branch:
+        description: Github branch from this repo to publish.  If blank, will use the default branch
+        required: false
+        default: ''
+        type: string
+      use-charmcraftcache:
+        description: Enable usage of charmcraftcache
+        required: false
+        default: false
+        type: boolean
     outputs:
-        channel:
-          description: "The release channel"
-          value: ${{ jobs.publish-charm.outputs.channel }}
-        track:
-          description: "The charm track"
-          value: ${{ jobs.check.outputs.track }}    
+      channel:
+        description: "The release channel"
+        value: ${{ jobs.publish-charm.outputs.channel }}
+      track:
+        description: "The charm track"
+        value: ${{ jobs.check.outputs.track }}
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: true
-
 jobs:
   check:
     runs-on: ubuntu-24.04
@@ -37,27 +40,37 @@ jobs:
           fetch-depth: 0
       - name: Get current branch
         id: check_step
-        run: |
-          sudo snap install jq --channel latest/edge 
-    
-          track=$(echo ${{ github.ref }} | jq -R | jq 'split("-")[0]' | jq 'sub("refs/tags/"; "")' | jq 'split("/")[1]')
-          echo "track=$track" >> $GITHUB_OUTPUT
-          echo "Track is $track."  
-      - name: Get channel 
+        run: "sudo snap install jq --channel latest/edge \n\ntrack=$(echo ${{ github.ref }} | jq -R | jq 'split(\"-\")[0]' | jq 'sub(\"refs/tags/\"; \"\")' | jq 'split(\"/\")[1]')\necho \"track=$track\" >> $GITHUB_OUTPUT\necho \"Track is $track.\"  \n"
+      - name: Get channel
         if: ${{ steps.check_step.outputs.track == 'null'}}
         run: echo "channel=latest/edge" >> $GITHUB_ENV
-      - name: Get channel 
+      - name: Get channel
         if: ${{ steps.check_step.outputs.track != 'null'}}
         run: echo "channel=${{ steps.check_step.outputs.track }}/edge" >> $GITHUB_ENV
       - name: Export channel
         id: export
         run: echo channel=${{ env.channel }} >> $GITHUB_OUTPUT
-
-  
+  build:
+    name: Build charm
+    uses: ./.github/workflows/_charm-build.yaml
+    with:
+      use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+    secrets:
+      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+  scan:
+    needs: build
+    uses: ./.github/workflows/_secscan.yaml
+    with:
+      artifacts-format: charm
+      artifacts-key: ${{ needs.build.outputs.artifacts-key }}
+      artifact-paths: ${{ needs.build.outputs.charm-paths }}
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-24.04
-    needs: check
+    needs:
+      - build
+      - check
+      - scan
     outputs:
       channel: ${{ steps.parse-inputs.outputs.destination_channel }}
     steps:
@@ -65,7 +78,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
-
       # Combine inputs from different sources to a single canonical value so later steps don't
       # need logic for picking the right one
       - name: Parse and combine inputs
@@ -75,12 +87,9 @@ jobs:
           destination_channel="${{ inputs.destination_channel || needs.check.outputs.channel }}"
           echo "setting output of destination_channel=$destination_channel"
           echo "destination_channel=$destination_channel" >> $GITHUB_OUTPUT
-
-      - name: Setup lxd
-        uses: canonical/setup-lxd@v0.1.2
+      - uses: actions/download-artifact@v4
         with:
-          channel: latest/stable
-
+          name: ${{ needs.build.outputs.artifacts-key }}
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
@@ -88,4 +97,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           destructive-mode: false
-
+          built-charm-path: ${{ needs.build.outputs.charm-paths}}
+          github-tag: false
+      - run: echo "files=$(echo ${{ needs.build.outputs.charm-paths}} | jq -R -r '. | sub(","; " ")')" >> $GITHUB_ENV
+      - name: Upload charms to release
+        run: gh release upload ${{ github.ref_name}} ${{ env.files }}
+        env:
+          GH_TOKEN: ${{ github.token }}
