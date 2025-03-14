@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Get rock name
         id: rock_name
@@ -28,7 +28,7 @@ jobs:
           syft ${{ env.ROCK }} -o spdx-json=${{ env.ROCK_NAME }}.sbom.json
 
       - name: Upload SBOMs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5 # v3
         with:
           name: ${{ env.ROCK_NAME }}-sbom
           path: "${{ env.ROCK_NAME }}.sbom.json"
@@ -36,7 +36,7 @@ jobs:
           ROCK_NAME: ${{ steps.rock_info.outputs.rock_name }}
 
       - name: Upload rock
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5 # v3
         with:
           name: rock
           path: ${{ env.ROCK }}
