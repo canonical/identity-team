@@ -2,6 +2,19 @@ name: Quality Checks
 
 on:
   workflow_call:
+    inputs:
+      charm_name:
+        description: Name of the charmed application the tests are running for
+        required: false
+        type: string
+      container_name:
+        description: Name of the application container to get logs from
+        required: false
+        type: string
+      charm_config_path:
+        description: Path to the application config file
+        required: false
+        type: string
 
 jobs:
   linting:
@@ -17,6 +30,10 @@ jobs:
   integration-test:
     name: Integration Tests
     uses: ./.github/workflows/_charm-tests-integration.yaml
+    with:
+      charm_name: ${{ inputs.charm_name }}
+      container_name: ${{ inputs.container_name }}
+      charm_config_path: ${{ inputs.charm_config_path }}
     needs:
       - linting
       - unit-test

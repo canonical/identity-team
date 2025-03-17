@@ -2,6 +2,19 @@ name: Unit Tests
 
 on:
   workflow_call:
+    inputs:
+      charm_name:
+        description: Name of the charmed application the tests are running for
+        required: false
+        type: string
+      container_name:
+        description: Name of the application container to get logs from
+        required: false
+        type: string
+      charm_config_path:
+        description: Path to the application config file
+        required: false
+        type: string
 
 jobs:
   integration-test:
@@ -26,6 +39,29 @@ jobs:
         if: failure()
         run: kubectl config view
 
+      - name: Get juju status
+        if: failure()
+        run: juju status --relations
+
       - name: Dump logs
         if: failure()
         uses: canonical/charming-actions/dump-logs@main
+
+      - name: Get juju logs for the charm
+        if: failure() && ${{ inputs.charm_name }}
+        run: juju debug-log --replay --include ${{ inputs.charm_name }}/0
+
+      - name: Get container logs
+        if: failure() && ${{ inputs.charm_name }} && ${{ inputs.container_name }}
+        run: kubectl logs ${{ inputs.charm_name }}-0 -c ${{ inputs.container_name }} -n testing
+
+      # Hack to overcome lack of tools (cat, tar) in the workload container
+      - name: Get config file
+        if: failure() && ${{ inputs.charm_config_path }} && ${{ inputs.charm_name }} && ${{ inputs.container_name }}
+        run: |
+           juju ssh ${{ inputs.charm_name }}/0 "PYTHONPATH=agents/unit-${{ inputs.charm_name }}-0/charm/venv/ python3 -c '
+           from ops import pebble
+           p = pebble.Client(\"/charm/containers/${{ inputs.container_name }}/pebble.socket\")
+           f = p.pull(\"${{ inputs.charm_config_path }}\")
+           print(f.read())
+           '"
