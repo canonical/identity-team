@@ -27,7 +27,7 @@ on:
         value: ${{ jobs.build.outputs.artifacts }}
     secrets:
       CHARMCRAFT_CREDENTIALS:
-        required: true
+        required: false
 jobs:
   build:
     runs-on: ubuntu-latest

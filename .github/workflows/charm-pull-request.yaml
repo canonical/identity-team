@@ -3,24 +3,35 @@ name: Pull Request Workflow
 on:
   workflow_call:
     inputs:
-      charm_name:
+      charm-name:
         description: Name of the charmed application the tests are running for
         required: false
         type: string
-      container_name:
+      container-name:
         description: Name of the application container to get logs from
         required: false
         type: string
-      charm_config_path:
+      charm-config-path:
         description: Path to the application config file
         required: false
         type: string
+      use-charmcraftcache:
+        description: Enable usage of charmcraftcache
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: false
 
 jobs:
   quality-checks:
     name: Quality Checks
     uses: ./.github/workflows/_charm-quality-checks.yaml
     with:
-      charm_name: ${{ inputs.charm_name }}
-      container_name: ${{ inputs.container_name }}
-      charm_config_path: ${{ inputs.charm_config_path }}
+      charm-name: ${{ inputs.charm-name }}
+      container-name: ${{ inputs.container-name }}
+      charm-config-path: ${{ inputs.charm-config-path }}
+      use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+    secrets:
+      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
