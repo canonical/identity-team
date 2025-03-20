@@ -25,9 +25,19 @@ on:
         required: false
 
 jobs:
-  quality-checks:
-    name: Quality Checks
-    uses: ./.github/workflows/_charm-quality-checks.yaml
+  linting:
+    name: Linting
+    uses: ./.github/workflows/_charm-linting.yaml
+
+  unit-test:
+    name: Unit Tests
+    uses: ./.github/workflows/_charm-tests-unit.yaml
+    needs:
+      - linting
+
+  integration-test:
+    name: Integration Tests
+    uses: ./.github/workflows/_charm-tests-integration.yaml
     with:
       charm-name: ${{ inputs.charm-name }}
       container-name: ${{ inputs.container-name }}
@@ -35,3 +45,6 @@ jobs:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
     secrets:
       CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+    needs:
+      - linting
+      - unit-test
