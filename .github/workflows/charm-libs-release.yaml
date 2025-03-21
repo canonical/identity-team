@@ -2,6 +2,11 @@ name: Release Charm Libraries
 
 on:
   workflow_call:
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: true
+      PAT_TOKEN:
+        required: true
 
 jobs:
   release-libs:
@@ -17,4 +22,4 @@ jobs:
         uses: canonical/charming-actions/release-libraries@main
         with:
           credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          github-token: "${{ secrets.PAT_TOKEN }}"

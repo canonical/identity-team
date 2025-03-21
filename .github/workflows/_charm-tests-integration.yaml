@@ -1,12 +1,42 @@
-name: Unit Tests
+name: Integration Tests
 
 on:
   workflow_call:
+    inputs:
+      charm-name:
+        description: Name of the charmed application the tests are running for
+        required: false
+        type: string
+      container-name:
+        description: Name of the application container to get logs from
+        required: false
+        type: string
+      charm-config-path:
+        description: Path to the application config file
+        required: false
+        type: string
+      use-charmcraftcache:
+        description: Enable usage of charmcraftcache
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: false
 
 jobs:
+  build:
+    name: Build charm
+    uses: ./.github/workflows/_charm-build.yaml
+    with:
+      use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+    secrets:
+      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+
   integration-test:
     name: Integration Tests (microk8s)
     runs-on: ubuntu-22.04
+    needs: build
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,6 +49,14 @@ jobs:
           channel: 1.28-strict/stable
           bootstrap-options: '--agent-version=3.4.0'
 
+      - name: Set CHARM_PATH envvar
+        run: echo "CHARM_PATH=${{ github.workspace }}/${{ needs.build.outputs.charm-paths }}" >> $GITHUB_ENV
+
+      - name: Download charm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.sha }}-build
+
       - name: Run integration tests
         run: tox -e integration -- --model testing
 
@@ -26,6 +64,29 @@ jobs:
         if: failure()
         run: kubectl config view
 
+      - name: Get juju status
+        if: failure()
+        run: juju status --relations
+
       - name: Dump logs
         if: failure()
         uses: canonical/charming-actions/dump-logs@main
+
+      - name: Get juju logs for the charm
+        if: ${{ failure() && (inputs.charm-name != '') }}
+        run: juju debug-log --replay --include ${{ inputs.charm-name }}/0
+
+      - name: Get container logs
+        if: ${{ failure() && (inputs.charm-name != '') && (inputs.container-name != '') }}
+        run: kubectl logs ${{ inputs.charm-name }}-0 -c ${{ inputs.container-name }} -n testing
+
+      # Hack to overcome lack of tools (cat, tar) in the workload container
+      - name: Get config file
+        if: ${{ failure() && (inputs.charm-config-path != '') && (inputs.charm-name != '') && (inputs.container-name != '') }}
+        run: |
+           juju ssh ${{ inputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ inputs.charm-name }}-0/charm/venv/ python3 -c '
+           from ops import pebble
+           p = pebble.Client(\"/charm/containers/${{ inputs.container-name }}/pebble.socket\")
+           f = p.pull(\"${{ inputs.charm-config-path }}\")
+           print(f.read())
+           '"
