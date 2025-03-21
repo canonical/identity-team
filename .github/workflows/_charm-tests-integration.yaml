@@ -35,7 +35,7 @@ jobs:
 
   integration-test:
     name: Integration Tests (microk8s)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout
