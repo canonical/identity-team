@@ -73,16 +73,16 @@ jobs:
         uses: canonical/charming-actions/dump-logs@main
 
       - name: Get juju logs for the charm
-        if: failure() && ${{ inputs.charm-name }}
+        if: ${{ failure() && (inputs.charm-name != '') }}
         run: juju debug-log --replay --include ${{ inputs.charm-name }}/0
 
       - name: Get container logs
-        if: failure() && ${{ inputs.charm-name }} && ${{ inputs.container-name }}
+        if: ${{ failure() && (inputs.charm-name != '') && (inputs.container-name != '') }}
         run: kubectl logs ${{ inputs.charm-name }}-0 -c ${{ inputs.container-name }} -n testing
 
       # Hack to overcome lack of tools (cat, tar) in the workload container
       - name: Get config file
-        if: failure() && ${{ inputs.charm-config-path }} && ${{ inputs.charm-name }} && ${{ inputs.container-name }}
+        if: ${{ failure() && (inputs.charm-config-path != '') && (inputs.charm-name != '') && (inputs.container-name != '') }}
         run: |
            juju ssh ${{ inputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ inputs.charm-name }}-0/charm/venv/ python3 -c '
            from ops import pebble
