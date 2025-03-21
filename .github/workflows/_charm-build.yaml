@@ -69,5 +69,5 @@ jobs:
           echo charm-paths=$(echo '${{ steps.get-charm-info.outputs.charm-platforms }}' | jq -r --arg charm ${{ steps.get-charm-info.outputs.charm-name }} '.[] |= split(":") | .[] |= join("-", .) | map($charm + "_" + . + ".charm") | join(",")') >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.ref_name }}-${{ github.job }}
+          name: ${{ github.sha }}-${{ github.job }}
           path: ${{ github.workspace }}/*.charm
