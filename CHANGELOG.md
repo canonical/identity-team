@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/canonical/identity-team/compare/v1.5.0...v1.6.0) (2025-03-21)
+
+
+### Features
+
+* **ci:** get charm and container logs on tests failure ([4429a38](https://github.com/canonical/identity-team/commit/4429a3807a4d6a7175ed2789110a7b20fd0012b3))
+* **ci:** use charmcraftcache in integration tests ([341d5b8](https://github.com/canonical/identity-team/commit/341d5b838ae14a8828b06e3a293f47f706599bf7))
+
+
+### Bug Fixes
+
+* **ci:** require secrets on workflow call ([f52cfa1](https://github.com/canonical/identity-team/commit/f52cfa1341f939003fe09173d7de3644f2937852))
+
 ## [1.5.0](https://github.com/canonical/identity-team/compare/v1.4.2...v1.5.0) (2025-03-14)
 
 
