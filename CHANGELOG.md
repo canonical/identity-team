@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/canonical/identity-team/compare/v1.6.0...v1.7.0) (2025-03-25)
+
+
+### Features
+
+* add cve label checker workflow ([ddcbf12](https://github.com/canonical/identity-team/commit/ddcbf12bcc3c679473842f14e23143b8aa3185f8))
+
 ## [1.6.0](https://github.com/canonical/identity-team/compare/v1.5.0...v1.6.0) (2025-03-21)
 
 
