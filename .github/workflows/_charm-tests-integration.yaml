@@ -20,9 +20,6 @@ on:
         required: false
         default: false
         type: boolean
-    secrets:
-      CHARMCRAFT_CREDENTIALS:
-        required: false
 
 jobs:
   build:
@@ -30,8 +27,6 @@ jobs:
     uses: ./.github/workflows/_charm-build.yaml
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
-    secrets:
-      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
 
   integration-test:
     name: Integration Tests (microk8s)
