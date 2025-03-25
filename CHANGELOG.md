@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/canonical/identity-team/compare/v1.7.0...v1.7.1) (2025-03-25)
+
+
+### Bug Fixes
+
+* drop CHARMCRAFT_CREDENTIALS from build wf secrets ([ae5cbef](https://github.com/canonical/identity-team/commit/ae5cbef6cfe8b37109cb4ffeaa741fc1d5fb21ae)), closes [#24](https://github.com/canonical/identity-team/issues/24)
+
 ## [1.7.0](https://github.com/canonical/identity-team/compare/v1.6.0...v1.7.0) (2025-03-25)
 
 
