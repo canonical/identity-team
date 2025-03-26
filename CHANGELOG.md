@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.3](https://github.com/canonical/identity-team/compare/v1.7.2...v1.7.3) (2025-03-26)
+
+
+### Bug Fixes
+
+* adjust secrets for charm build ([133857e](https://github.com/canonical/identity-team/commit/133857e965dd1f3a6a2ddb9fb0b287de46616c4d))
+* drop secret for charm-build ([64a9632](https://github.com/canonical/identity-team/commit/64a9632b5a62e55686bdb8693782536975068890))
+
 ## [1.7.2](https://github.com/canonical/identity-team/compare/v1.7.1...v1.7.2) (2025-03-26)
 
 
