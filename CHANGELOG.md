@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.2](https://github.com/canonical/identity-team/compare/v1.7.1...v1.7.2) (2025-03-26)
+
+
+### Bug Fixes
+
+* adjust build artifact name output ([f38acc4](https://github.com/canonical/identity-team/commit/f38acc4617e5eb77c0587c85e63abf7d1ffe2654))
+* ensure artifact name is consistent ([542fdd8](https://github.com/canonical/identity-team/commit/542fdd84ef09db9bef611efba4871453f81069be))
+
 ## [1.7.1](https://github.com/canonical/identity-team/compare/v1.7.0...v1.7.1) (2025-03-25)
 
 
