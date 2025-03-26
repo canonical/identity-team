@@ -33,7 +33,7 @@ jobs:
       name: ${{ steps.get-charm-info.outputs.charm-name }}
       platforms: ${{ steps.get-charm-info.outputs.charm-platforms }}
       paths: ${{ steps.get-charm-paths.outputs.charm-paths }}
-      artifacts: ${{ github.ref_name }}-${{ github.job }}
+      artifacts: ${{ steps.artifact-name.outputs.artifact }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -63,7 +63,9 @@ jobs:
         id: get-charm-paths
         run: |
           echo charm-paths=$(echo '${{ steps.get-charm-info.outputs.charm-platforms }}' | jq -r --arg charm ${{ steps.get-charm-info.outputs.charm-name }} '.[] |= split(":") | .[] |= join("-", .) | map($charm + "_" + . + ".charm") | join(",")') >> $GITHUB_OUTPUT
+      - id: artifact-name
+        run: echo artifact='${{ github.sha }}-${{ github.job }}' >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.sha }}-${{ github.job }}
+          name: ${{ steps.artifact-name.outputs.artifact }}
           path: ${{ github.workspace }}/*.charm
