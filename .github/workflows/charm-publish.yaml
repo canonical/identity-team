@@ -55,8 +55,6 @@ jobs:
     uses: ./.github/workflows/_charm-build.yaml
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
-    secrets:
-      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
   scan:
     needs: build
     uses: ./.github/workflows/_secscan.yaml
