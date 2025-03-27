@@ -54,6 +54,8 @@ jobs:
           echo CHARMCRAFT_BIN=ccc >> $GITHUB_ENV
       - name: Build charm
         run: ${{ env.CHARMCRAFT_BIN}} pack -v
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Get charm info
         id: get-charm-info
         run: |
