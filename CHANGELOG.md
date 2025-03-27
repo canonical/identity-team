@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.4](https://github.com/canonical/identity-team/compare/v1.7.3...v1.7.4) (2025-03-27)
+
+
+### Bug Fixes
+
+* remove CHARMCRAFT_CREDENTIALS from charm-pull-request ([3a6a4d4](https://github.com/canonical/identity-team/commit/3a6a4d471ecc00a5b3fe39b48df97bfbf01628cb))
+* remove CHARMCRAFT_CREDENTIALS from charm-pull-request ([30c1589](https://github.com/canonical/identity-team/commit/30c15894893e713b9fd8a83ddc710be6ffc35422))
+
 ## [1.7.3](https://github.com/canonical/identity-team/compare/v1.7.2...v1.7.3) (2025-03-26)
 
 
