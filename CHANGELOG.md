@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.5](https://github.com/canonical/identity-team/compare/v1.7.4...v1.7.5) (2025-03-27)
+
+
+### Bug Fixes
+
+* add GH_TOKEN to address https://github.com/canonical/charmcraftcache/issues/1 ([511be98](https://github.com/canonical/identity-team/commit/511be98aaf4f4e350bece03e775d674712812b2d))
+* use GH_TOKEN for ccc build ([0707d86](https://github.com/canonical/identity-team/commit/0707d867fa1ec0667a1b7ce58d6277458a72a4ad))
+
 ## [1.7.4](https://github.com/canonical/identity-team/compare/v1.7.3...v1.7.4) (2025-03-27)
 
 
