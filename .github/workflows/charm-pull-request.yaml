@@ -43,8 +43,6 @@ jobs:
       container-name: ${{ inputs.container-name }}
       charm-config-path: ${{ inputs.charm-config-path }}
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
-    secrets:
-      CHARMCRAFT_CREDENTIALS: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
     needs:
       - linting
       - unit-test
