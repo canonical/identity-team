@@ -37,8 +37,9 @@ jobs:
         with:
           juju-channel: 3.6/stable
           provider: microk8s
-          channel: 1.31-strict/stable
+          channel: 1.32-strict/stable
           bootstrap-options: '--agent-version=3.6.4'
+          microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
 
       - name: Get charm info
         id: get-charm-info
