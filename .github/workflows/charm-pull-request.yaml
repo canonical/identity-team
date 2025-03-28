@@ -16,6 +16,11 @@ on:
         required: false
         default: false
         type: boolean
+      node-size:
+        description: Size of the self-hosted node (one of medium, large or xlarge) to run the integration tests
+        type: string
+        required: false
+        default: large
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -38,6 +43,7 @@ jobs:
       container-name: ${{ inputs.container-name }}
       charm-config-path: ${{ inputs.charm-config-path }}
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+      node-size: ${{ inputs.node-size }}
     needs:
       - linting
       - unit-test

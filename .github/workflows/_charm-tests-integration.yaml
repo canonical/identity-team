@@ -16,6 +16,11 @@ on:
         required: false
         default: false
         type: boolean
+      node-size:
+        description: Size of the self-hosted node (one of medium, large or xlarge) to run the integration tests
+        type: string
+        required: false
+        default: large
 
 jobs:
   build:
@@ -24,10 +29,20 @@ jobs:
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
 
+  node-size-validation:
+    runs-on: ubuntu-latest
+    name: Input Node Size validation
+    steps:
+      - name: Validate node size variable
+        if: ${{ !contains(fromJSON('["medium", "large", "xlarge"]'), inputs.node-size) }}
+        run: exit 1
+
   integration-test:
     name: Integration Tests (microk8s)
-    runs-on: [self-hosted, amd64, xlarge, jammy]
-    needs: build
+    runs-on: [self-hosted, amd64, "${{ inputs.node-size }}", jammy]
+    needs:
+      - build
+      - node-size-validation
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,7 +53,6 @@ jobs:
           juju-channel: 3.6/stable
           provider: microk8s
           channel: 1.32-strict/stable
-          bootstrap-options: '--agent-version=3.6.4'
           microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
 
       - name: Get charm info
