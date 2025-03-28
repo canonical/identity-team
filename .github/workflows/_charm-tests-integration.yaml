@@ -3,10 +3,6 @@ name: Integration Tests
 on:
   workflow_call:
     inputs:
-      charm-name:
-        description: Name of the charmed application the tests are running for
-        required: false
-        type: string
       container-name:
         description: Name of the application container to get logs from
         required: false
@@ -44,6 +40,11 @@ jobs:
           channel: 1.28-strict/stable
           bootstrap-options: '--agent-version=3.4.0'
 
+      - name: Get charm info
+        id: get-charm-info
+        run: |
+          echo charm-name=$(cat charmcraft.yaml | yq '.name') >> $GITHUB_OUTPUT
+
       - name: Set CHARM_PATH envvar
         run: echo "CHARM_PATH=${{ github.workspace }}/${{ needs.build.outputs.charm-paths }}" >> $GITHUB_ENV
 
@@ -68,18 +69,18 @@ jobs:
         uses: canonical/charming-actions/dump-logs@main
 
       - name: Get juju logs for the charm
-        if: ${{ failure() && (inputs.charm-name != '') }}
-        run: juju debug-log --replay --include ${{ inputs.charm-name }}/0
+        if: ${{ failure() }}
+        run: juju debug-log --replay --include ${{ steps.get-charm-info.outputs.charm-name }}/0
 
       - name: Get container logs
-        if: ${{ failure() && (inputs.charm-name != '') && (inputs.container-name != '') }}
-        run: kubectl logs ${{ inputs.charm-name }}-0 -c ${{ inputs.container-name }} -n testing
+        if: ${{ failure() && (inputs.container-name != '') }}
+        run: kubectl logs ${{ steps.get-charm-info.outputs.charm-name }}-0 -c ${{ inputs.container-name }} -n testing
 
       # Hack to overcome lack of tools (cat, tar) in the workload container
       - name: Get config file
-        if: ${{ failure() && (inputs.charm-config-path != '') && (inputs.charm-name != '') && (inputs.container-name != '') }}
+        if: ${{ failure() && (inputs.charm-config-path != '') && (inputs.container-name != '') }}
         run: |
-           juju ssh ${{ inputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ inputs.charm-name }}-0/charm/venv/ python3 -c '
+           juju ssh ${{ steps.get-charm-info.outputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ steps.get-charm-info.outputs.charm-name }}-0/charm/venv/ python3 -c '
            from ops import pebble
            p = pebble.Client(\"/charm/containers/${{ inputs.container-name }}/pebble.socket\")
            f = p.pull(\"${{ inputs.charm-config-path }}\")
