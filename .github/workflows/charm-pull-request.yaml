@@ -3,10 +3,6 @@ name: Pull Request Workflow
 on:
   workflow_call:
     inputs:
-      charm-name:
-        description: Name of the charmed application the tests are running for
-        required: false
-        type: string
       container-name:
         description: Name of the application container to get logs from
         required: false
@@ -20,6 +16,11 @@ on:
         required: false
         default: false
         type: boolean
+      node-size:
+        description: Size of the self-hosted node (one of medium, large or xlarge) to run the integration tests
+        type: string
+        required: false
+        default: large
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -39,10 +40,10 @@ jobs:
     name: Integration Tests
     uses: ./.github/workflows/_charm-tests-integration.yaml
     with:
-      charm-name: ${{ inputs.charm-name }}
       container-name: ${{ inputs.container-name }}
       charm-config-path: ${{ inputs.charm-config-path }}
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+      node-size: ${{ inputs.node-size }}
     needs:
       - linting
       - unit-test
