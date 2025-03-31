@@ -71,6 +71,10 @@ jobs:
       - name: Run integration tests
         run: tox -e integration -- --model testing
 
+      - name: Setup tmate session
+        if: failure()
+        uses: canonical/action-tmate@main
+
       - name: Get contexts
         if: failure()
         run: kubectl config view
