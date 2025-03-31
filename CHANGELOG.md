@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.6](https://github.com/canonical/identity-team/compare/v1.7.5...v1.7.6) (2025-03-31)
+
+
+### Bug Fixes
+
+* drop charm-name input and infer it from charmcraft.yaml ([aaf2239](https://github.com/canonical/identity-team/commit/aaf2239d49017be82ce8ffb29f9071e76af9e9e5))
+* move to self hosted runners ([f3d2ac3](https://github.com/canonical/identity-team/commit/f3d2ac3be2e9c1c81a306b1d1a3fdbdbf456c7ca))
+* specify addons for microk8s ([d77470d](https://github.com/canonical/identity-team/commit/d77470d4e0eb25aadd682f5148f1e2ab87998bc7))
+* specify node size as input ([d9be03c](https://github.com/canonical/identity-team/commit/d9be03c371e141c3b560f22c6f625cd390129e11))
+* update k8s and juju versions ([7dd9e22](https://github.com/canonical/identity-team/commit/7dd9e22a4b2b161af5d8feb8e5aa9e9c5239f037))
+* use self hosted runners to overcome disk issues when running integration tests ([a066c5a](https://github.com/canonical/identity-team/commit/a066c5a8a785c3d30c75c2d89c53353f4cabd6ce))
+
 ## [1.7.5](https://github.com/canonical/identity-team/compare/v1.7.4...v1.7.5) (2025-03-27)
 
 
