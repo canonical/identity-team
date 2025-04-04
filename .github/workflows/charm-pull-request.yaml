@@ -21,6 +21,16 @@ on:
         type: string
         required: false
         default: large
+      tox-unit-test-targets:
+        description: Comma separated list of tox targets needed to perform unit-tests
+        type: string
+        required: false
+        default: unit
+      tox-integration-test-targets:
+        description: Comma separated list of tox targets needed to perform integration-tests
+        type: string
+        required: false
+        default: integration
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -33,6 +43,8 @@ jobs:
   unit-test:
     name: Unit Tests
     uses: ./.github/workflows/_charm-tests-unit.yaml
+    with:
+      tox-unit-test-targets: ${{ inputs.tox-unit-test-targets }}
     needs:
       - linting
 
@@ -44,6 +56,7 @@ jobs:
       charm-config-path: ${{ inputs.charm-config-path }}
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
       node-size: ${{ inputs.node-size }}
+      tox-integration-test-targets: ${{ inputs.tox-integration-test-targets }}
     needs:
       - linting
       - unit-test
