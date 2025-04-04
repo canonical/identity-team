@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.7](https://github.com/canonical/identity-team/compare/v1.7.6...v1.7.7) (2025-04-04)
+
+
+### Bug Fixes
+
+* allow tox targets to be specified in ci ([a16520c](https://github.com/canonical/identity-team/commit/a16520cbfc4c95a172e9699564d274e781c9e267))
+* specify tox targets for int and unit tests ([54fefed](https://github.com/canonical/identity-team/commit/54fefed6a7fd67e8dd0feb4d461d9c0411a692bf))
+
 ## [1.7.6](https://github.com/canonical/identity-team/compare/v1.7.5...v1.7.6) (2025-03-31)
 
 
