@@ -21,6 +21,11 @@ on:
         type: string
         required: false
         default: large
+      tox-integration-test-targets:
+        description: Comma separated list of tox targets needed to perform integration-tests
+        type: string
+        required: false
+        default: integration
 
 jobs:
   build:
@@ -69,7 +74,7 @@ jobs:
           name: ${{ github.sha }}-build
 
       - name: Run integration tests
-        run: tox -e integration -- --model testing
+        run: tox -e ${{ inputs.tox-integration-test-targets }} -- --model testing
 
       - name: Get contexts
         if: failure()

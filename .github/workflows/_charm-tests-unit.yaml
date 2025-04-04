@@ -2,6 +2,12 @@ name: Unit Tests
 
 on:
   workflow_call:
+    inputs:
+      tox-unit-test-targets:
+        description: Comma separated list of tox targets needed to perform unit-tests
+        type: string
+        required: false
+        default: unit
 
 jobs:
   unit-tests:
@@ -15,4 +21,4 @@ jobs:
         run: python -m pip install tox
 
       - name: Run unit tests
-        run: tox -e unit
+        run: tox -e ${{ inputs.tox-unit-test-targets }}
