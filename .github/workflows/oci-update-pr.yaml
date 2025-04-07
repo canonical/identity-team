@@ -1,0 +1,77 @@
+name: OCI Image Create and Update PR
+
+on:
+  workflow_call:
+    inputs:
+      base-branch:
+        description: 'Base branch to merge into (e.g., main)'
+        required: false
+        default: main
+        type: string
+      branch-name:
+        description: 'Name of the branch to create (e.g., update-config)'
+        required: false
+        default: oci-update
+        type: string
+      file-path:
+        description: 'Path to the file to update (e.g., config/settings.txt)'
+        required: false
+        default: charmcraft.yaml
+        type: string
+      pr-title:
+        description: 'Title of the pull request'
+        required: false
+        default: "fix: update OCI-image resource"
+        type: string
+      pr-label:
+        description: 'Label to apply on the pull request'
+        required: false
+        default: "enhancement"
+        type: string
+      oci-image:
+        description: 'New OCI image to use in the charmcraft file'
+        required: true
+        type: string
+      repository:
+        description: 'Github repository to create a PR against'
+        required: true
+        type: string
+    secrets:
+      PAT_TOKEN:
+        required: true
+
+permissions:
+    contents: write
+    pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base-branch }}
+          repository: ${{ inputs.repository }}
+          token: ${{ secrets.PAT_TOKEN }}
+      - name: Checkout existing branch and reset
+        run: |
+          git switch --track -c ${{ inputs.branch-name }}
+          git reset --hard ${{ inputs.base-branch }}
+      - name: Update file
+        run: |
+          yq e -i '.resources.oci-image.upstream-source = "${{ inputs.oci-image }}"' ${{ inputs.file-path }}
+          git add ${{ inputs.file-path }}
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "fix: update oci-image to ${{ inputs.oci-image }}"
+      - name: Push changes
+        run: git push origin ${{ inputs.branch-name }} --force
+      - name: Create pull request
+        run: gh pr create --fill --title="${{ inputs.pr-title }}" -l ${{ inputs.pr-label }} || true
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_DEBUG: 1
+          DEBUG: 1
