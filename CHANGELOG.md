@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/canonical/identity-team/compare/v1.7.7...v1.8.0) (2025-04-08)
+
+
+### Features
+
+* adjust rock publishing ([2461510](https://github.com/canonical/identity-team/commit/2461510896333ee6fa3a7141ee0c46fad8400a8b))
+* introduce oci updater wf ([4267eb2](https://github.com/canonical/identity-team/commit/4267eb223e3763720f96c2027dd68b82e4319c0d))
+
 ## [1.7.7](https://github.com/canonical/identity-team/compare/v1.7.6...v1.7.7) (2025-04-04)
 
 
