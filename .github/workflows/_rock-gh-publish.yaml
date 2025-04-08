@@ -1,0 +1,88 @@
+name: image publish
+run-name: Publish ROCK image from ${{ inputs.rock }} to ghcr.io/${{ github.repository }}
+
+on:
+  workflow_call:
+    inputs:
+      rock:
+        type: string
+        required: true
+        description: "rock path to download"
+      structure-tests-enabled:
+        type: boolean
+        default: false
+        required: false
+        description: "Flag defining if structure tests are present"
+    outputs:
+      image:
+        description: "container image"
+        value: ${{ jobs.publish.outputs.image }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.set.outputs.image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Download Artifact
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        with:
+          name: ${{ inputs.rock }}
+
+      # Use the rockcraft snap to get skopeo because the snap and the apt package on the ubuntu
+      # archives are very old. Only rockcraft=latest/edge has a newer skopeo version
+      # TODO: Either use rockcraft=latest/stable or install skopeo from apt when one
+      # of them is updated
+      - name: Install Rockcraft to get Skopeo
+        run: sudo snap install --classic --channel latest/edge rockcraft
+
+      - name: Install Skaffold and Container Structure Tests tools
+        if: inputs.structure-tests-enabled == true
+        run: |
+          mkdir -p bin/
+          curl -Lo bin/container-structure-test https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+          chmod +x bin/container-structure-test
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+      - name: Run container structural tests
+        if: inputs.structure-tests-enabled == true
+        run: |
+          # docker-daemon avoids the push to the remote registry
+          sudo rockcraft.skopeo --insecure-policy copy oci-archive:$(realpath ./"${{ inputs.rock }}") docker-daemon:ghcr.io/${{ github.repository }}:${{ github.sha }} --dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}
+          container-structure-test test -c structure-tests.yaml -i ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      - name: Upload ROCK to ghcr.io in latest channel
+        id: latest
+        if: ${{ github.ref_type }} == "branch"
+        run: |
+          versions=(latest "${{ github.sha }}")
+
+          for version in "${versions[@]}"; do
+            sudo rockcraft.skopeo --insecure-policy copy \
+              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+              oci-archive:$(realpath ./"${{ inputs.rock }}") \
+              docker://ghcr.io/${{ github.repository }}:"${version}"
+          done
+
+          echo "image=ghcr.io/${{ github.repository }}:${{ github.sha }}" >> "$GITHUB_ENV"
+
+      - name: Upload ROCK to ghcr.io in stable channel
+        id: stable
+        if: ${{ github.ref_type }} == "tag"
+        run: |
+          versions=(stable "${{ github.ref_name }}")
+
+          for version in "${versions[@]}"; do
+            sudo rockcraft.skopeo --insecure-policy copy \
+              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+              oci-archive:$(realpath ./"${{ inputs.rock }}") \
+              docker://ghcr.io/${{ github.repository }}:"${version}"
+          done
+
+          echo "image=ghcr.io/${{ github.repository }}:${{ github.ref_name }}" >> "$GITHUB_ENV"
+
+      - name: Set output of image
+        id: set
+        run: echo "image=$image" >> "$GITHUB_OUTPUT"

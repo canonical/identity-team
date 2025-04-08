@@ -1,0 +1,68 @@
+name: image publish
+run-name: Publish ROCK image from ${{ inputs.rock }} to OCI Factory
+
+on:
+  workflow_call:
+    secrets:
+      PAT_TOKEN:
+        required: true
+    inputs:
+      stable-release:
+        type: boolean
+        required: false
+        default: true
+        description: "Defines if it's a release of a stable risk rock"
+      edge-release:
+        type: boolean
+        required: false
+        default: true
+        description: "Defines if it's a release of an edge risk rock"
+      eol-stable-release:
+        type: string
+        required: false
+        default: "3 month"
+        description: "EOL timeline to support a stable risk rock, follows format of linux `date`"
+      eol-edge-release:
+        type: string
+        required: false
+        default: "14 day"
+        description: "EOL timeline to support an edge risk rock, follows format of linux `date`"
+      ubuntu-base-version:
+        type: string
+        required: false
+        default: "22.04"
+
+jobs:
+  oci-factory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Golang setup
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+        with:
+          go-version: ">=1.22.0"
+      # install oci-factory via golang and set path in environment
+      - name: Install oci-factory
+        run: |
+          sudo apt update && sudo apt install -y git
+          go install github.com/canonical/oci-factory/tools/cli-client/cmd/oci-factory@latest
+          go install github.com/mikefarah/yq/v4@v4.44.3
+          echo "OCI_FACTORY=$(go env GOPATH)/bin/oci-factory" >> $GITHUB_ENV
+          echo "YQ=$(go env GOPATH)/bin/yq" >> $GITHUB_ENV
+      - name: Set EOLs and version
+        run: |
+          echo EOL_STABLE=$(date -d "$(date +'%Y-%m-%d') +${{ inputs.eol-stable-release }}" "+%Y-%m-%d") >> $GITHUB_ENV
+          echo EOL_CANDIDATE=$(date -d "$(date +'%Y-%m-%d') +${{ inputs.eol-edge-release }}" "+%Y-%m-%d") >> $GITHUB_ENV
+          echo IMAGE_VERSION_STABLE=$($YQ '.version | split(".").0' rockcraft.yaml) >> $GITHUB_ENV
+          echo IMAGE_VERSION_CANDIDATE=$($YQ '.version | split(".").[0:2] | join(".")' rockcraft.yaml) >> $GITHUB_ENV
+      - name: Release to stable
+        run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_STABLE-${{ inputs.ubuntu-base-version }},risks=stable,eol=$EOL_STABLE
+        if: inputs.stable-release == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Release to stable
+        run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_CANDIDATE-${{ inputs.ubuntu-base-version }},risks=candidate,edge,eol=$EOL_CANDIDATE
+        if: inputs.edge-release == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}

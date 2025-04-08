@@ -1,34 +1,25 @@
-name: Scan rock
+name: image scan
+run-name: Scanning image ${{ inputs.image }}
 
 on:
   workflow_call:
-
+    inputs:
+      image:
+        type: string
+        required: true
+        description: "image to scan"
 jobs:
   scan:
-    name: Scan
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get rock name and version
-        id: rock_info
-        run: |
-          echo "rock_name=$(yq '.name' rockcraft.yaml)" >> "$GITHUB_OUTPUT"
-          echo "rock_version=$(yq '.version' rockcraft.yaml)" >> "$GITHUB_OUTPUT"
-
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "ghcr.io/canonical/${{ env.ROCK_NAME }}:${{ env.ROCK_VERSION }}"
+          image-ref: ${{ inputs.image }}
           format: 'sarif'
           output: 'trivy-results.sarif'
-        env:
-          ROCK_NAME: ${{ steps.rock_info.outputs.rock_name }}
-          ROCK_VERSION: ${{ steps.rock_info.outputs.rock_version }}
 
       - name: Upload scan results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@fc7e4a0fa01c3cca5fd6a1fddec5c0740c977aa2 # v3
         with:
           sarif_file: 'trivy-results.sarif'

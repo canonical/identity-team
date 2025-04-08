@@ -1,44 +1,39 @@
-name: Build rock
+name: build
+run-name: Build steps for ${{ github.sha }} on ${{ github.ref_name }}
 
 on:
   workflow_call:
+    outputs:
+      rock:
+        description: "rock image"
+        value: ${{ jobs.build.outputs.rock }}
 
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    outputs:
+      rock: ${{ steps.rockcraft.outputs.rock }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Get rock name
-        id: rock_name
-        run: |
-          echo "name=$(yq '.name' rockcraft.yaml)" >> "$GITHUB_OUTPUT"
-
       - uses: canonical/craft-actions/rockcraft-pack@main
-        id: rockcraft_build
+        id: rockcraft
 
       - name: Generate SBOMs (Software Bill of Materials)
-        env:
-          ROCK: ${{ steps.rockcraft_build.outputs.rock }}
-          ROCK_NAME: ${{ steps.rock_info.outputs.rock_name }}
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
-          syft ${{ env.ROCK }} -o spdx-json=${{ env.ROCK_NAME }}.sbom.json
+          syft ${{ steps.rockcraft.outputs.rock }} -o spdx-json=${{ steps.rockcraft.outputs.rock }}.sbom.json
 
       - name: Upload SBOMs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ROCK_NAME }}-sbom
-          path: "${{ env.ROCK_NAME }}.sbom.json"
-        env:
-          ROCK_NAME: ${{ steps.rock_info.outputs.rock_name }}
+          name: ${{ steps.rockcraft.outputs.rock }}-sbom
+          path: "${{ steps.rockcraft.outputs.rock }}.sbom.json"
 
       - name: Upload rock
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: rock
-          path: ${{ env.ROCK }}
-        env:
-          ROCK: ${{ steps.rockcraft_build.outputs.rock }}
+          name: ${{ steps.rockcraft.outputs.rock }}
+          path: ${{ steps.rockcraft.outputs.rock }}
