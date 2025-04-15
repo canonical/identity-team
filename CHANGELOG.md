@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.8.2](https://github.com/canonical/identity-team/compare/v1.8.1...v1.8.2) (2025-04-15)
+
+
+### Bug Fixes
+
+* adjust cve and secscan wf ([2ae7d52](https://github.com/canonical/identity-team/commit/2ae7d5240696b05751803b21a35af29b7b641eac))
+* set issue id in case of gh event in cve wf ([37faded](https://github.com/canonical/identity-team/commit/37faded53244b89d0304271f2e310e8e8f31457e))
+* use github.run_id for the secscan issue creator ([8d0faa0](https://github.com/canonical/identity-team/commit/8d0faa0983d6480e972b9891f26f33dd19fe83d9))
+
 ## [1.8.1](https://github.com/canonical/identity-team/compare/v1.8.0...v1.8.1) (2025-04-15)
 
 
