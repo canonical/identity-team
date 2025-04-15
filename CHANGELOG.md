@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/canonical/identity-team/compare/v1.8.0...v1.8.1) (2025-04-15)
+
+
+### Bug Fixes
+
+* move container structure tests to rock-build wf ([561fd6d](https://github.com/canonical/identity-team/commit/561fd6dff45195ba67706bf49a748ada305eacd8))
+
 ## [1.8.0](https://github.com/canonical/identity-team/compare/v1.7.7...v1.8.0) (2025-04-08)
 
 
