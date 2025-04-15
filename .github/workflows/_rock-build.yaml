@@ -3,6 +3,12 @@ run-name: Build steps for ${{ github.sha }} on ${{ github.ref_name }}
 
 on:
   workflow_call:
+    inputs:
+      structure-tests-enabled:
+        type: boolean
+        default: false
+        required: false
+        description: "Flag defining if structure tests are present"
     outputs:
       rock:
         description: "rock image"
@@ -20,6 +26,27 @@ jobs:
 
       - uses: canonical/craft-actions/rockcraft-pack@main
         id: rockcraft
+
+      # Use the rockcraft snap to get skopeo because the snap and the apt package on the ubuntu
+      # archives are very old. Only rockcraft=latest/edge has a newer skopeo version
+      # TODO: Either use rockcraft=latest/stable or install skopeo from apt when one
+      # of them is updated
+      - name: Install Rockcraft to get Skopeo
+        run: sudo snap install --classic --channel latest/edge rockcraft
+
+      - name: Install Skaffold and Container Structure Tests tools
+        if: inputs.structure-tests-enabled == true
+        run: |
+          mkdir -p bin/
+          curl -Lo bin/container-structure-test https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+          chmod +x bin/container-structure-test
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+      - name: Run container structural tests
+        if: inputs.structure-tests-enabled == true
+        run: |
+          # docker-daemon avoids the push to the remote registry
+          sudo rockcraft.skopeo --insecure-policy copy oci-archive:$(realpath ./"${{ steps.rockcraft.outputs.rock }}") docker-daemon:ghcr.io/${{ github.repository }}:${{ github.sha }} --dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}
+          container-structure-test test -c structure-tests.yaml -i ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Generate SBOMs (Software Bill of Materials)
         run: |

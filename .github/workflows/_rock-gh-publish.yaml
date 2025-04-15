@@ -4,15 +4,15 @@ run-name: Publish ROCK image from ${{ inputs.rock }} to ghcr.io/${{ github.repos
 on:
   workflow_call:
     inputs:
-      rock:
-        type: string
-        required: true
-        description: "rock path to download"
       structure-tests-enabled:
         type: boolean
         default: false
         required: false
-        description: "Flag defining if structure tests are present"
+        description: "Flag defining if structure tests are present -- DEPRECATED: use the _rock-build action to run tests"
+      rock:
+        type: string
+        required: true
+        description: "rock path to download"
     outputs:
       image:
         description: "container image"
@@ -38,20 +38,6 @@ jobs:
       # of them is updated
       - name: Install Rockcraft to get Skopeo
         run: sudo snap install --classic --channel latest/edge rockcraft
-
-      - name: Install Skaffold and Container Structure Tests tools
-        if: inputs.structure-tests-enabled == true
-        run: |
-          mkdir -p bin/
-          curl -Lo bin/container-structure-test https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
-          chmod +x bin/container-structure-test
-          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
-      - name: Run container structural tests
-        if: inputs.structure-tests-enabled == true
-        run: |
-          # docker-daemon avoids the push to the remote registry
-          sudo rockcraft.skopeo --insecure-policy copy oci-archive:$(realpath ./"${{ inputs.rock }}") docker-daemon:ghcr.io/${{ github.repository }}:${{ github.sha }} --dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}
-          container-structure-test test -c structure-tests.yaml -i ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Upload ROCK to ghcr.io in latest channel
         id: latest
