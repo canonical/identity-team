@@ -40,7 +40,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Setup lxd
-        uses: canonical/setup-lxd@v0.1.2
+        uses: canonical/setup-lxd@54a5806e490d92e207b57183cf111ed54bbdeff4 # v0.1.2
         with:
           channel: latest/stable
       - name: Install charmcraft
@@ -67,7 +67,7 @@ jobs:
           echo charm-paths=$(echo '${{ steps.get-charm-info.outputs.charm-platforms }}' | jq -r --arg charm ${{ steps.get-charm-info.outputs.charm-name }} '.[] |= split(":") | .[] |= join("-", .) | map($charm + "_" + . + ".charm") | join(",")') >> $GITHUB_OUTPUT
       - id: artifact-name
         run: echo artifact='${{ github.sha }}-${{ github.job }}' >> $GITHUB_OUTPUT
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.artifact-name.outputs.artifact }}
           path: ${{ github.workspace }}/*.charm
