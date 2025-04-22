@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.3](https://github.com/canonical/identity-team/compare/v1.8.2...v1.8.3) (2025-04-22)
+
+
+### Bug Fixes
+
+* enhance secscan job fialure with proper output in issue body ([fa22f11](https://github.com/canonical/identity-team/commit/fa22f1108387b92236300d65f3a62d91031b82ff))
+
 ## [1.8.2](https://github.com/canonical/identity-team/compare/v1.8.1...v1.8.2) (2025-04-15)
 
 
