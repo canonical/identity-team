@@ -11,11 +11,19 @@ on:
         description: 'Destination Channel'
         type: string
         required: true
-      base-channel:
-        description: 'Charmcraft Base Channel'
+      charm-path:
+        description: 'Path to charm directory'
+        type: string
+        required: false
+        default: '.'
+      charmcraft-channel:
+        description: 'Snap channel to use when installing charmcraft'
         required: false
         type: string
-        default: '22.04'
+        default: 'latest/edge'
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: true
 
 jobs:
   promote-charm:
@@ -26,10 +34,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Promote charm to channel
-        uses: canonical/charming-actions/release-charm@2.4.0
+        uses: canonical/charming-actions/promote-charm@2.7.0
         with:
           credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           origin-channel: ${{ github.event.inputs.origin-channel }}
           destination-channel: ${{ github.event.inputs.destination-channel }}
-          base-channel: ${{ github.event.inputs.base-channel }}
+          charm-path: ${{ github.event.inputs.charm-path }}
+          charmcraft-channel: ${{ github.event.inputs.charmcraft-channel }}
