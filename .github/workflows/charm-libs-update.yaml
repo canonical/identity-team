@@ -32,7 +32,7 @@ jobs:
         uses: canonical/create-pull-request@main
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
-          commit-message: Update charm dependent libs
+          commit-message: 'fix: update charm dependent libs'
           branch-name: 'automated-update-charm-libs'
           title: (Automated) Update Charm Dependent Libs
           body: Update charm dependent libraries
