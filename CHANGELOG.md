@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.4](https://github.com/canonical/identity-team/compare/v1.8.3...v1.8.4) (2025-04-23)
+
+
+### Bug Fixes
+
+* make the charm lib update workflow use the conventional commit message ([43d7005](https://github.com/canonical/identity-team/commit/43d70059c5c20ec60790ddfe69d4fda31f7d93e9))
+* make the charm lib update workflow use the conventional commit message ([6d5e428](https://github.com/canonical/identity-team/commit/6d5e428206ecc729ff74baafe7a33295be104533))
+
 ## [1.8.3](https://github.com/canonical/identity-team/compare/v1.8.2...v1.8.3) (2025-04-22)
 
 
