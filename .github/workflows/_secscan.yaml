@@ -46,14 +46,14 @@ jobs:
         id: secscan
         continue-on-error: true
         run: |
-          secscan-client --batch submit --scanner trivy --type ${{ inputs.artifacts-type }} --format ${{ inputs.artifacts-format }} ${{ matrix.artifact }} --wait-and-print > ${{ env.secscan-result }}
-          cat ${{ env.secscan-result }}
           echo secscan-result=${{ env.secscan-result }} >> $GITHUB_OUTPUT
+          secscan-client --batch submit --scanner trivy --type ${{ inputs.artifacts-type }} --format ${{ inputs.artifacts-format }} ${{ matrix.artifact }} --wait-and-print > ${{ env.secscan-result }}
         env:
           secscan-result: secscan.result
       - name: Create issue
         if: steps.secscan.outcome != 'success'
         run: |
+          cat ${{ steps.secscan.outputs.secscan-result }}
           echo "please check job ${{ github.run_id}}" >> ${{ steps.secscan.outputs.secscan-result}}
           gh issue create -R ${{ github.repository }} --label bug --title "Release compromised by CVE" -F ${{ steps.secscan.outputs.secscan-result}}
         env:
