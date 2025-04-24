@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.5](https://github.com/canonical/identity-team/compare/v1.8.4...v1.8.5) (2025-04-24)
+
+
+### Bug Fixes
+
+* create outputs in secscan step before cmd failure ([7f37f85](https://github.com/canonical/identity-team/commit/7f37f85ef7a2035998056e856810ca59209b811a))
+
 ## [1.8.4](https://github.com/canonical/identity-team/compare/v1.8.3...v1.8.4) (2025-04-23)
 
 
