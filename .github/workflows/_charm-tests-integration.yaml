@@ -26,6 +26,16 @@ on:
         type: string
         required: false
         default: integration
+      k8s-distribution:
+        description: The k8s distribution to run integration tests on (one of microk8s, k8s)
+        type: string
+        required: false
+        default: k8s
+      k8s-channel:
+        description: The snap channel to install the k8s provider from
+        type: string
+        required: false
+        default: 1.33-classic/stable
 
 jobs:
   build:
@@ -53,12 +63,41 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup operator environment (microk8s)
+        if: ${{ (inputs.k8s-distribution == 'microk8s') }}
         uses: charmed-kubernetes/actions-operator@main
         with:
           juju-channel: 3.6/stable
           provider: microk8s
           channel: 1.32-strict/stable
           microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
+
+      - name: Setup canonical k8s
+        if: ${{ (inputs.k8s-distribution == 'k8s') }}
+        run: |
+          sudo snap install k8s --classic --channel="${{ inputs.k8s-channel }}"
+          sudo k8s bootstrap
+          sudo k8s status --wait-ready
+    
+          mkdir -p ~/.kube
+          sudo k8s config > ~/.kube/config
+          sudo chown -f -R $USER ~/.kube
+    
+          echo "KUBECONFIG=$HOME/.kube/config" >> $GITHUB_ENV
+    
+          # Create a kubectl shim to override kubectl command globally
+          echo '#!/bin/bash' > /usr/local/bin/kubectl
+          echo 'sudo k8s kubectl "$@"' >> /usr/local/bin/kubectl
+          sudo chmod +x /usr/local/bin/kubectl
+
+      - name: Setup operator environment (k8s)
+        if: ${{ (inputs.k8s-distribution == 'k8s') }}
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          juju-channel: 3.6/stable
+
+      - name: Bootstrap k8s controller
+        if: ${{ (inputs.k8s-distribution == 'k8s') }}
+        run: juju bootstrap k8s
 
       - name: Get charm info
         id: get-charm-info
