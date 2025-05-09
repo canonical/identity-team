@@ -31,6 +31,16 @@ on:
         type: string
         required: false
         default: integration
+      k8s-distribution:
+        description: The k8s distribution to run integration tests on (one of microk8s, k8s)
+        type: string
+        required: false
+        default: k8s
+      k8s-channel:
+        description: The snap channel to install the k8s provider from
+        type: string
+        required: false
+        default: 1.33-classic/stable
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -57,6 +67,8 @@ jobs:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
       node-size: ${{ inputs.node-size }}
       tox-integration-test-targets: ${{ inputs.tox-integration-test-targets }}
+      k8s-distribution: ${{ inputs.k8s-distribution }}
+      k8s-channel: ${{ inputs.k8s-channel }}
     needs:
       - linting
       - unit-test
