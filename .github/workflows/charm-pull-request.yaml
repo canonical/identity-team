@@ -31,6 +31,16 @@ on:
         type: string
         required: false
         default: integration
+      use-canonical-k8s:
+        type: boolean
+        description: Whether to use canonical k8s instead of microk8s
+        default: false
+      modules:
+        description: |
+          List of testing modules to run the tests in JSON format, i.e. '["foo", "bar"]'.
+          Each element will be passed to pytest through tox as -k argument.
+        type: string
+        default: '["test_charm.py"]'
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -48,15 +58,36 @@ jobs:
     needs:
       - linting
 
-  integration-test:
-    name: Integration Tests
-    uses: ./.github/workflows/_charm-tests-integration.yaml
-    with:
-      container-name: ${{ inputs.container-name }}
-      charm-config-path: ${{ inputs.charm-config-path }}
-      use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
-      node-size: ${{ inputs.node-size }}
-      tox-integration-test-targets: ${{ inputs.tox-integration-test-targets }}
+  node-size-validation:
+    runs-on: ubuntu-latest
+    name: Input Node Size validation
+    steps:
+      - name: Validate node size variable
+        if: ${{ !contains(fromJSON('["medium", "large", "xlarge"]'), inputs.node-size) }}
+        run: exit 1
     needs:
       - linting
       - unit-test
+
+  integration-test:
+    name: Integration Tests
+    uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
+    needs:
+      - linting
+      - unit-test
+      - node-size-validation
+    secrets: inherit
+    with:
+      use-canonical-k8s: ${{ inputs.use-canonical-k8s }}
+      provider: ${{ inputs.use-canonical-k8s && 'k8s' || 'microk8s' }}
+      channel: ${{ inputs.use-canonical-k8s && 'edge' || '1.32-strict/stable' }}
+      microk8s-addons: ${{ inputs.use-canonical-k8s && '' || 'dns hostpath-storage metallb:10.64.140.43-10.64.140.49' }}
+      extra-arguments: |
+        --kube-config=~/.kube/config
+      juju-channel: 3.6/stable
+      self-hosted-runner: true
+      self-hosted-runner-label: ${{ inputs.node-size }}
+      self-hosted-runner-image: jammy
+      test-tox-env: ${{ inputs.tox-integration-test-targets }}
+      modules: ${{ inputs.modules }}
+      charmcraftcache: ${{ inputs.use-charmcraftcache }}
