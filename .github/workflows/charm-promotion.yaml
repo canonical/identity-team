@@ -37,7 +37,7 @@ jobs:
         uses: canonical/charming-actions/promote-charm@2.7.0
         with:
           credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
-          origin-channel: ${{ github.event.inputs.origin-channel }}
-          destination-channel: ${{ github.event.inputs.destination-channel }}
-          charm-path: ${{ github.event.inputs.charm-path }}
-          charmcraft-channel: ${{ github.event.inputs.charmcraft-channel }}
+          origin-channel: ${{ inputs.origin-channel }}
+          destination-channel: ${{ inputs.destination-channel }}
+          charm-path: ${{ inputs.charm-path }}
+          charmcraft-channel: ${{ inputs.charmcraft-channel }}
