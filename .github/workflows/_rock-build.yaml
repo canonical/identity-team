@@ -22,7 +22,7 @@ jobs:
       rock: ${{ steps.rockcraft.outputs.rock }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - uses: canonical/craft-actions/rockcraft-pack@main
         id: rockcraft
@@ -54,13 +54,13 @@ jobs:
           syft ${{ steps.rockcraft.outputs.rock }} -o spdx-json=${{ steps.rockcraft.outputs.rock }}.sbom.json
 
       - name: Upload SBOMs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.rockcraft.outputs.rock }}-sbom
           path: "${{ steps.rockcraft.outputs.rock }}.sbom.json"
 
       - name: Upload rock
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.rockcraft.outputs.rock }}
           path: ${{ steps.rockcraft.outputs.rock }}
