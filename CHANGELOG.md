@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.6](https://github.com/canonical/identity-team/compare/v1.8.5...v1.8.6) (2025-06-06)
+
+
+### Bug Fixes
+
+* fix the charm promotion action ([80d0d36](https://github.com/canonical/identity-team/commit/80d0d36f2bca5b8011005be4bcb403e64b2f2c9f))
+* fix the charm promotion action ([9acd96b](https://github.com/canonical/identity-team/commit/9acd96b47bcf585b30f4df8ee8be3991e7d69e4a))
+
 ## [1.8.5](https://github.com/canonical/identity-team/compare/v1.8.4...v1.8.5) (2025-04-24)
 
 
