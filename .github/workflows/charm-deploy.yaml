@@ -16,6 +16,15 @@ on:
         channel:
             type: string
             required: true
+        tf-application-resource:
+            type: string
+            # Set this default for backwards compatibility.
+            # TODO(nsklikas): When all repos have migrated to use the charm tf
+            # module to deploy then we should change the default to
+            # "module.application.juju_application.application".
+            # See https://github.com/canonical/identity-team/issues/63
+            default: "juju_application.application"
+            required: false
         tf-folder:
             type: string
             default: "./deployment"
@@ -47,13 +56,13 @@ jobs:
         working-directory: ${{ inputs.tf-folder }}
         run: |
           terraform init
-          terraform import juju_application.application ${{ inputs.model}}:${{ inputs.application }} || true
+          terraform import ${{ inputs.tf-application-resource }} ${{ inputs.model}}:${{ inputs.application }} || true
         env:
           TF_VAR_model: ${{ inputs.model }}
           TF_VAR_revision: ${{ inputs.revision }}
           TF_VAR_channel: ${{ inputs.channel }}
           TF_VAR_application_name: "${{ inputs.application }}"
-          
+
       - name: Deploy
         working-directory: ${{ inputs.tf-folder }}
         run: |
