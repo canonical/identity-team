@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.7](https://github.com/canonical/identity-team/compare/v1.8.6...v1.8.7) (2025-06-12)
+
+
+### Bug Fixes
+
+* make application resource path configurable ([c6c5005](https://github.com/canonical/identity-team/commit/c6c5005af647103ec02dd16a19c009d1520f11cf))
+
 ## [1.8.6](https://github.com/canonical/identity-team/compare/v1.8.5...v1.8.6) (2025-06-06)
 
 
