@@ -8,8 +8,14 @@
 # 4. Use this script to update the tokens in all our repos
 # 5. Update the script in the repo
 
-PAT_TOKEN=change-me
-SCORECARD_TOKEN=change-me
+# fail and early return if one or both env var are not set
+if ! ([ -n "$PAT_TOKEN" ] && [ -n "$SCORECARD_TOKEN" ])
+then
+  echo "please set both env var needed"
+  echo "- PAT_TOKEN"
+  echo "- SCORECARD_TOKEN"
+  exit 1
+fi
 
 repos=(
     "fosite"
