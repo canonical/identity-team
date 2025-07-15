@@ -31,10 +31,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Promote charm to channel
-        uses: canonical/charming-actions/promote-charm@2.7.0
+        uses: canonical/charming-actions/promote-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
           credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
           origin-channel: ${{ inputs.origin-channel }}
