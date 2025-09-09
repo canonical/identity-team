@@ -1,0 +1,5 @@
+project:
+  name: Identity Team
+  tz: Europe/Rome
+  adrFolder: ./decisions
+  packages: []
