@@ -47,7 +47,7 @@ jobs:
         continue-on-error: true
         run: |
           echo secscan-result=${{ env.secscan-result }} >> $GITHUB_OUTPUT
-          secscan-client --batch submit --scanner trivy --type ${{ inputs.artifacts-type }} --format ${{ inputs.artifacts-format }} ${{ matrix.artifact }} --wait-and-print > ${{ env.secscan-result }}
+          secscan-client --batch submit --scanner trivy --type ${{ inputs.artifacts-type }} --format ${{ inputs.artifacts-format }} ${{ matrix.artifact }} --wait-and-print | tee ${{ env.secscan-result }}
         env:
           secscan-result: secscan.result
       - name: Create issue
