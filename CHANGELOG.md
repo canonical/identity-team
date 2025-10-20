@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.9.0](https://github.com/canonical/identity-team/compare/v1.8.7...v1.9.0) (2025-10-20)
+
+
+### Features
+
+* add daily message post script ([13d5cdf](https://github.com/canonical/identity-team/commit/13d5cdf71e62ab59e0a9a6de5cad111087c42c2e))
+* add decicion about async dailies ([8ae9f0c](https://github.com/canonical/identity-team/commit/8ae9f0cb986d5cbcfca348669daa54662f2a6881))
+
+
+### Bug Fixes
+
+* add group management decision ([fc47fd2](https://github.com/canonical/identity-team/commit/fc47fd2eb97d2ae6b239c2b6b60849f715a497f4))
+* add log4brains ([0bae68f](https://github.com/canonical/identity-team/commit/0bae68f40731daf954af78e4e7061d357e39bdb0))
+* fix the rock gh publish reusable workflow ([cf78453](https://github.com/canonical/identity-team/commit/cf78453de48b3f5c44f467013873c19da4483a19))
+* fix the rock gh publish reusable workflow ([684332a](https://github.com/canonical/identity-team/commit/684332a4352b4271c6a574d6e3ac125783e3bdf1))
+
 ## [1.8.7](https://github.com/canonical/identity-team/compare/v1.8.6...v1.8.7) (2025-06-12)
 
 
