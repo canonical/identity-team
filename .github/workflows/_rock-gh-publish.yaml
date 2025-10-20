@@ -41,7 +41,7 @@ jobs:
 
       - name: Upload ROCK to ghcr.io in latest channel
         id: latest
-        if: ${{ github.ref_type }} == "branch"
+        if: ${{ github.ref_type == 'branch' }}
         run: |
           versions=(latest "${{ github.sha }}")
 
@@ -56,7 +56,7 @@ jobs:
 
       - name: Upload ROCK to ghcr.io in stable channel
         id: stable
-        if: ${{ github.ref_type }} == "tag"
+        if: ${{ github.ref_type == 'tag' }}
         run: |
           versions=(stable "${{ github.ref_name }}")
 
