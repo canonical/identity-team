@@ -61,7 +61,7 @@ jobs:
         if: inputs.stable-release == true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-      - name: Release to stable
+      - name: Release to edge and candidate
         run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_CANDIDATE-${{ inputs.ubuntu-base-version }},risks=candidate,edge,eol=$EOL_CANDIDATE
         if: inputs.edge-release == true
         env:
