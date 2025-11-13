@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.1](https://github.com/canonical/identity-team/compare/v1.9.0...v1.9.1) (2025-11-13)
+
+
+### Bug Fixes
+
+* add ps6 debugging document ([bbe4c25](https://github.com/canonical/identity-team/commit/bbe4c2539ef4806e47ee89a784685f7f9ea33a33))
+* fix the rock oci publish reusable workflow ([094089a](https://github.com/canonical/identity-team/commit/094089a77de265e2ed0e392681dcbf73a6ef11f8))
+* fix the rock oci publish reusable workflow ([5b96d7b](https://github.com/canonical/identity-team/commit/5b96d7be4e590e14c27bf55ba26e76acd0d40b51))
+
 ## [1.9.0](https://github.com/canonical/identity-team/compare/v1.8.7...v1.9.0) (2025-10-20)
 
 
