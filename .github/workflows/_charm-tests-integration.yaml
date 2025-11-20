@@ -26,6 +26,13 @@ on:
         type: string
         required: false
         default: integration
+      tox-integration-test-provider:
+        description: |
+          Which Juju provider to use as the backing cloud for integration-tests.
+          Can be lxd or microk8s.
+        type: string
+        required: false
+        default: microk8s
 
 jobs:
   build:
@@ -42,6 +49,14 @@ jobs:
         if: ${{ !contains(fromJSON('["medium", "large", "xlarge"]'), inputs.node-size) }}
         run: exit 1
 
+  provider-validation:
+    runs-on: ubuntu-latest
+    name: Provider validation
+    steps:
+      - name: Validate provider variable
+        if: ${{ !contains(fromJSON('["microk8s", "lxd"]'), inputs.tox-integration-test-provider }}
+        run: exit 1
+
   integration-test:
     name: Integration Tests (microk8s)
     runs-on: [self-hosted, amd64, "${{ inputs.node-size }}", jammy]
@@ -53,12 +68,21 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Setup operator environment (microk8s)
+        if: ${{ inputs.tox-integration-test-provider == 'microk8s' }}
         uses: charmed-kubernetes/actions-operator@main
         with:
           juju-channel: 3.6/stable
           provider: microk8s
           channel: 1.32-strict/stable
           microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
+
+      - name: Setup operator environment (lxd)
+        if: ${{ inputs.tox-integration-test-provider == 'lxd' }}
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          juju-channel: 3.6/stable
+          provider: lxd
+          channel: 5.21/stable
 
       - name: Get charm info
         id: get-charm-info
@@ -77,7 +101,7 @@ jobs:
         run: tox -e ${{ inputs.tox-integration-test-targets }} -- --model testing
 
       - name: Get contexts
-        if: failure()
+        if: ${{ failure() && (inputs.tox-integration-test-provider == 'microk8s') }}
         run: kubectl config view
 
       - name: Get juju status
@@ -93,12 +117,12 @@ jobs:
         run: juju debug-log --replay --include ${{ steps.get-charm-info.outputs.charm-name }}/0
 
       - name: Get container logs
-        if: ${{ failure() && (inputs.container-name != '') }}
+        if: ${{ failure() && (inputs.tox-integration-test-provider == 'microk8s') && (inputs.container-name != '')  }}
         run: kubectl logs ${{ steps.get-charm-info.outputs.charm-name }}-0 -c ${{ inputs.container-name }} -n testing
 
       # Hack to overcome lack of tools (cat, tar) in the workload container
       - name: Get config file
-        if: ${{ failure() && (inputs.charm-config-path != '') && (inputs.container-name != '') }}
+        if: ${{ failure() && (inputs.tox-integration-test-provider == 'microk8s') && (inputs.charm-config-path != '') && (inputs.container-name != '') }}
         run: |
            juju ssh ${{ steps.get-charm-info.outputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ steps.get-charm-info.outputs.charm-name }}-0/charm/venv/ python3 -c '
            from ops import pebble
@@ -106,3 +130,8 @@ jobs:
            f = p.pull(\"${{ inputs.charm-config-path }}\")
            print(f.read())
            '"
+
+      - name: Get config file
+        if: ${{ failure() && (inputs.tox-integration-test-provider == 'lxd') && (inputs.charm-config-path != '') }}
+        run: |
+          juju exec --unit ${{ steps.get-charm-info.outputs.charm-name }} -- cat ${{ inputs.charm-config-path }}
