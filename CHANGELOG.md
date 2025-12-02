@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.2](https://github.com/canonical/identity-team/compare/v1.9.1...v1.9.2) (2025-12-02)
+
+
+### Bug Fixes
+
+* fix the Rock gh publish workflow ([a15e25e](https://github.com/canonical/identity-team/commit/a15e25e5b88bb4fbbe27570123dabbb4d0f10212))
+* fix the Rock gh publish workflow ([#82](https://github.com/canonical/identity-team/issues/82)) ([4dd18c0](https://github.com/canonical/identity-team/commit/4dd18c0073aacdf80ec71b1cc9a0838868e11533))
+
 ## [1.9.1](https://github.com/canonical/identity-team/compare/v1.9.0...v1.9.1) (2025-11-13)
 
 
