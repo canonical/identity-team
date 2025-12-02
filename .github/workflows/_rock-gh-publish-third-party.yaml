@@ -1,5 +1,5 @@
-name: image publish for canonical-owned application
-run-name: Publish ROCK image of canonical owned application from ${{ inputs.rock }} to ghcr.io/${{ github.repository }}
+name: image publish for third-party application
+run-name: Publish ROCK image of third-party application from ${{ inputs.rock }} to ghcr.io
 
 on:
   workflow_call:
@@ -22,7 +22,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - name: Download Artifact
+      - name: Get image name
+        run: echo "image_name=$(yq -r '.name' rockcraft.yaml)" >> "$GITHUB_ENV"
+
+      - name: Download artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ${{ inputs.rock }}
@@ -32,7 +35,6 @@ jobs:
 
       - name: Upload ROCK to ghcr.io in latest channel
         id: latest
-        if: ${{ github.ref_type == 'branch' }}
         run: |
           versions=(latest "${{ github.sha }}")
 
@@ -40,25 +42,25 @@ jobs:
             sudo rockcraft.skopeo --insecure-policy copy \
               --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
               oci-archive:$(realpath ./"${{ inputs.rock }}") \
-              docker://ghcr.io/${{ github.repository }}:"${version}"
+              docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
           done
 
-          echo "image=ghcr.io/${{ github.repository }}:${{ github.sha }}" >> "$GITHUB_ENV"
+          echo "image=ghcr.io/${{ github.repository_owner }}/$image_name:${{ github.sha }}" >> "$GITHUB_ENV"
 
       - name: Upload ROCK to ghcr.io in stable channel
         id: stable
-        if: ${{ github.ref_type == 'tag' }}
         run: |
-          versions=(stable "${{ github.ref_name }}")
+          image_tag=$(yq -r '.version' rockcraft.yaml)
+          versions=(stable $image_tag)
 
           for version in "${versions[@]}"; do
             sudo rockcraft.skopeo --insecure-policy copy \
               --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
               oci-archive:$(realpath ./"${{ inputs.rock }}") \
-              docker://ghcr.io/${{ github.repository }}:"${version}"
+              docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
           done
 
-          echo "image=ghcr.io/${{ github.repository }}:${{ github.ref_name }}" >> "$GITHUB_ENV"
+          echo "image=ghcr.io/${{ github.repository_owner }}/$image_name:$image_tag" >> "$GITHUB_ENV"
 
       - name: Set output of image
         id: set

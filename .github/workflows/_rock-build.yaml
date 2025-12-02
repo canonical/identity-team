@@ -27,12 +27,8 @@ jobs:
       - uses: canonical/craft-actions/rockcraft-pack@main
         id: rockcraft
 
-      # Use the rockcraft snap to get skopeo because the snap and the apt package on the ubuntu
-      # archives are very old. Only rockcraft=latest/edge has a newer skopeo version
-      # TODO: Either use rockcraft=latest/stable or install skopeo from apt when one
-      # of them is updated
       - name: Install Rockcraft to get Skopeo
-        run: sudo snap install --classic --channel latest/edge rockcraft
+        run: sudo snap install --classic --channel latest/stable rockcraft
 
       - name: Install Skaffold and Container Structure Tests tools
         if: inputs.structure-tests-enabled == true
@@ -41,6 +37,7 @@ jobs:
           curl -Lo bin/container-structure-test https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
           chmod +x bin/container-structure-test
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
       - name: Run container structural tests
         if: inputs.structure-tests-enabled == true
         run: |
