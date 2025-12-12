@@ -26,6 +26,11 @@ on:
         type: string
         required: false
         default: integration
+      debug-enabled:
+        type: boolean
+        description: Run integration tests with tmate debugging enabled
+        required: false
+        default: false
 
 jobs:
   build:
@@ -49,6 +54,14 @@ jobs:
       - build
       - node-size-validation
     steps:
+      - name: Setup tmate session
+        uses: canonical/action-tmate@main
+        if: ${{ fromJSON(inputs.debug-enabled || 'false') }}
+        timeout-minutes: 600
+        with:
+          detached: true
+          sudo: true
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
