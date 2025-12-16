@@ -63,7 +63,7 @@ jobs:
           sudo: true
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Setup operator environment (microk8s)
         uses: charmed-kubernetes/actions-operator@main
@@ -82,7 +82,7 @@ jobs:
         run: echo "CHARM_PATH=${{ github.workspace }}/${{ needs.build.outputs.charm-paths }}" >> $GITHUB_ENV
 
       - name: Download charm artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: ${{ github.sha }}-build
 
