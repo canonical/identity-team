@@ -35,7 +35,7 @@ jobs:
       channel: ${{ steps.export.outputs.channel }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
       - name: Get current branch
@@ -73,7 +73,7 @@ jobs:
       channel: ${{ steps.parse-inputs.outputs.destination_channel }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
       # Combine inputs from different sources to a single canonical value so later steps don't
@@ -85,7 +85,7 @@ jobs:
           destination_channel="${{ inputs.destination_channel || needs.check.outputs.channel }}"
           echo "setting output of destination_channel=$destination_channel"
           echo "destination_channel=$destination_channel" >> $GITHUB_OUTPUT
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: ${{ needs.build.outputs.artifacts-key }}
       - name: Upload charm to charmhub
