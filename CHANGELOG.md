@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.3](https://github.com/canonical/identity-team/compare/v1.9.2...v1.9.3) (2026-01-05)
+
+
+### Bug Fixes
+
+* enable tmate debugging session for charm integration tests ([23283b7](https://github.com/canonical/identity-team/commit/23283b70a7afbe5812bc3ca927816b3e5fdf84a3))
+* enable tmate debugging session for charm integration tests ([#84](https://github.com/canonical/identity-team/issues/84)) ([8ace0ff](https://github.com/canonical/identity-team/commit/8ace0ffb9f634202b203c946a2b4ef3c87830d95))
+
 ## [1.9.2](https://github.com/canonical/identity-team/compare/v1.9.1...v1.9.2) (2025-12-02)
 
 
