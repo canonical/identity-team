@@ -28,5 +28,5 @@ jobs:
           MATRIX_ROOM_ID: ${{ secrets.MATRIX_ROOM_ID }}
           MATRIX_DAILY_MESSAGE: ${{ vars.MATRIX_DAILY_MESSAGE }}
         run: |
-          curl -XPOST -d '{"msgtype": "m.text","body": "${MATRIX_DAILY_MESSAGE}"}' \
-          https://ubuntu.com/_matrix/client/v3/rooms/${MATRIX_ROOM_ID}/send/m.room.message?access_token=${MATRIX_ACCESS_TOKEN}
+          curl -XPOST https://ubuntu.com/_matrix/client/v3/rooms/${{ env.MATRIX_ROOM_ID }}/send/m.room.message?access_token=${{ env.MATRIX_ACCESS_TOKEN }} -d '{"msgtype": "m.text","body": "${{ env.MATRIX_DAILY_MESSAGE }}"}'
+          
