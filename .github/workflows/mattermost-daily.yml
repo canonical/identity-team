@@ -28,9 +28,5 @@ jobs:
           MATRIX_ROOM_ID: ${{ secrets.MATRIX_ROOM_ID }}
           MATRIX_DAILY_MESSAGE: ${{ vars.MATRIX_DAILY_MESSAGE }}
         run: |
-          curl -XPOST -d '{
-            "msgtype": "m.text",
-            "body": "Hello! This is bold text.",
-            "format": "org.matrix.custom.html",
-            "formatted_body": "${MATRIX_DAILY_MESSAGE}"
-            }' "https://ubuntu.com/_matrix/client/v3/rooms/${MATRIX_ROOM_ID}/send/m.room.message?access_token=${MATRIX_ACCESS_TOKEN}"
+          curl -XPOST -d '{"msgtype": "m.text","body": "${MATRIX_DAILY_MESSAGE}"}' \
+          https://ubuntu.com/_matrix/client/v3/rooms/${MATRIX_ROOM_ID}/send/m.room.message?access_token=${MATRIX_ACCESS_TOKEN}
