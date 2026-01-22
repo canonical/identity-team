@@ -5,10 +5,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  daily-message:
+  daily-message-mattermost:
     runs-on: ubuntu-latest
     steps:
-      - name: Post daily message
+      - name: Post daily message on mattermost
         id: post-daily-message
         env:
           MATTERMOST_ACCESS_TOKEN: ${{ secrets.MATTERMOST_ACCESS_TOKEN }}
@@ -18,3 +18,19 @@ jobs:
           curl -i -X POST -H "Authorization: Bearer ${MATTERMOST_ACCESS_TOKEN}" \
             https://chat.canonical.com/api/v4/posts \
             -d "{\"channel_id\":\"${MATTERMOST_CHANNEL_ID}\", \"message\": \"$MATTERMOST_DAILY_MESSAGE\"}"
+  daily-message-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post daily message on matrix
+        id: post-daily-message
+        env:
+          MATRIX_ACCESS_TOKEN: ${{ secrets.MATRIX_ACCESS_TOKEN }}
+          MATRIX_ROOM_ID: ${{ secrets.MATRIX_ROOM_ID }}
+          MATRIX_DAILY_MESSAGE: ${{ vars.MATRIX_DAILY_MESSAGE }}
+        run: |
+          curl -XPOST -d '{
+            "msgtype": "m.text",
+            "body": "Hello! This is bold text.",
+            "format": "org.matrix.custom.html",
+            "formatted_body": "${MATRIX_DAILY_MESSAGE}"
+            }' "https://ubuntu.com/_matrix/client/v3/rooms/${MATRIX_ROOM_ID}/send/m.room.message?access_token=${MATRIX_ACCESS_TOKEN}"
