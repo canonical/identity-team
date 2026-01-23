@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/canonical/identity-team/compare/v1.9.3...v1.10.0) (2026-01-23)
+
+
+### Features
+
+* allow a plan-only workflow to be run, for debugging and testing ([9c603ed](https://github.com/canonical/identity-team/commit/9c603ed160a97438698a73c7e37996163e2b2171))
+* allow a plan-only workflow to be run, for debugging and testing ([#89](https://github.com/canonical/identity-team/issues/89)) ([68f9dbe](https://github.com/canonical/identity-team/commit/68f9dbed00d3ac851e0d4dbdf96672bd20fadf77))
+
 ## [1.9.3](https://github.com/canonical/identity-team/compare/v1.9.2...v1.9.3) (2026-01-05)
 
 
