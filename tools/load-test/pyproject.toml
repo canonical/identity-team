@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydra-migration-load"
+version = "0.1.0"
+description = "Hydra migration load testing tool"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "httpx",
+    "playwright",
+    "pyotp",
+]s
+pythonpath = ["hydra_migration_load"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.0",
+    "flake8>=6.0",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+hydra-migration-load = "hydra_migration_load.cli:main"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
