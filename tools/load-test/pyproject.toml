@@ -12,8 +12,7 @@ dependencies = [
     "httpx",
     "playwright",
     "pyotp",
-]s
-pythonpath = ["hydra_migration_load"]
+]
 
 [project.optional-dependencies]
 dev = [
