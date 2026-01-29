@@ -14,7 +14,7 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4
+      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
         id: release
         with:   
           token: ${{ secrets.PAT_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
           target-branch: ${{ github.ref_name }}
           # ensure release-please manifest has the component set to track-<version> in track branches
           include-component-in-tag: ${{ contains(github.ref_name, 'track') }}
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - if: ${{ steps.release.outputs.pr != '' }}
         run: |
           gh pr merge --auto --merge ${{ fromJSON(steps.release.outputs.pr).number }} || true
