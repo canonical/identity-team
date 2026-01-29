@@ -57,7 +57,7 @@ jobs:
       TF_VAR_client_secret: ${{ secrets.CLIENT_SECRET }}
       TF_VAR_jimm_url: ${{ secrets.JIMM_URL }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_wrapper: false
