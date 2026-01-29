@@ -28,6 +28,7 @@ apps=(
     "identity-platform-admin-ui"
     "identity-platform-login-ui"
     "user-verification-service"
+    "ubuntu-sso"
 )
 
 misc=(
