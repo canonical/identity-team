@@ -1,10 +1,10 @@
 module github.com/canonical/identity-team/tools/matrix-daily
 
-go 1.24.11
+go 1.25.0
 
 require (
 	github.com/kelseyhightower/envconfig v1.4.0
-	maunium.net/go/mautrix v0.26.2
+	maunium.net/go/mautrix v0.26.3
 )
 
 require (
@@ -16,10 +16,10 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	go.mau.fi/util v0.9.5 // indirect
-	golang.org/x/crypto v0.47.0 // indirect
-	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
-	golang.org/x/net v0.49.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/text v0.33.0 // indirect
+	go.mau.fi/util v0.9.6 // indirect
+	golang.org/x/crypto v0.48.0 // indirect
+	golang.org/x/exp v0.0.0-20260212183809-81e46e3db34a // indirect
+	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
 )
