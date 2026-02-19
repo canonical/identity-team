@@ -13,6 +13,7 @@ charms=(
     "oauth2-proxy-k8s-operator"
     "openfga-operator"
     "user-verification-service-operator"
+    "ubuntu-sso-k8s-operator"
 )
 
 rocks=(
@@ -29,6 +30,8 @@ apps=(
     "identity-platform-login-ui"
     "user-verification-service"
     "ubuntu-sso"
+    "tenant-service"
+    "identity-saml-provider"
 )
 
 misc=(
