@@ -22,10 +22,10 @@ jobs:
   daily-message-matrix:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.25
+      image: golang:1.26
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Run Matrix Sender
         working-directory: ./tools/matrix-daily
         env:
