@@ -26,7 +26,7 @@ jobs:
           target-branch: ${{ github.ref_name }}
           # ensure release-please manifest has the component set to track-<version> in track branches
           include-component-in-tag: ${{ contains(github.ref_name, 'track') }}
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - if: ${{ steps.release.outputs.pr != '' }}
         run: |
           gh pr merge --auto --merge ${{ fromJSON(steps.release.outputs.pr).number }} || true
