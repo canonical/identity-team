@@ -82,3 +82,36 @@ export VAULT_CAPATH=$(pwd)/vault.pem; echo "Setting VAULT_CAPATH from" "$VAULT_C
 key_init=$(vault operator init -key-shares=1 -key-threshold=1); echo "$key_init"
 vault operator unseal $(cat vault_unseal_key.txt)
 ```
+
+## K8S CD cluster is down
+
+### When this happens
+
+If the k8s API is unresponsive (e.g. `kubectl` commands are failing), the most likely issue is on the etcd cluster. The CD k8s API is backed by the etcd cluster on `cd-etcd-node-*`.
+
+- SSH to an etcd node:
+```console
+ssh cd-etcd-node-0
+```
+
+- Check the etcd status:
+```console
+rev=$(etcdctl endpoint status --write-out=json | egrep -o '"revision":[0-9]*' | cut -d: -f2)
+```
+
+Even if no errors are reported, it is still worth running the compact and defrag commands below, as they often resolve the issue.
+
+### How to fix it
+
+- SSH to an etcd node:
+```console
+ssh cd-etcd-node-0
+```
+
+- Compact and defrag etcd:
+```console
+/snap/charmed-etcd/current/bin/etcdctl compact $rev --physical=true
+/snap/charmed-etcd/current/bin/etcdctl defrag  -w table --endpoints http://10.141.162.57:2379,http://10.141.162.220:2379,http://10.141.162.149:2379,http://10.141.162.36:2379,http://10.141.162.5:2379 --cluster=true --command-timeout=120s
+```
+
+If etcd was the root cause, the k8s API should recover on its own shortly after.
