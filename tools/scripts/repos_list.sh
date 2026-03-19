@@ -32,6 +32,8 @@ apps=(
     "ubuntu-sso"
     "tenant-service"
     "identity-saml-provider"
+    "secure-token-service"
+    "authorization-service"
 )
 
 misc=(
