@@ -1,6 +1,7 @@
 name: mattermost-daily-message
 on:
   schedule:
+    - cron: '0 7 * * 1-5'
     - cron: '0 8 * * 1-5'
   workflow_dispatch:
 
@@ -8,8 +9,18 @@ jobs:
   daily-message-mattermost:
     runs-on: ubuntu-latest
     steps:
+      - name: Check local time window
+        id: timegate
+        run: |
+          hour="$(TZ='Europe/Paris' date +%H)"
+          if [ "$hour" = "09" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Post daily message on mattermost
         id: post-daily-message
+        if: github.event_name == 'workflow_dispatch' || steps.timegate.outputs.run == 'true'
         env:
           MATTERMOST_ACCESS_TOKEN: ${{ secrets.MATTERMOST_ACCESS_TOKEN }}
           MATTERMOST_CHANNEL_ID: ${{ secrets.MATTERMOST_CHANNEL_ID }}
@@ -24,9 +35,20 @@ jobs:
     container:
       image: golang:1.25
     steps:
+      - name: Check local time window
+        id: timegate
+        run: |
+          hour="$(TZ='Europe/Paris' date +%H)"
+          if [ "$hour" = "09" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Checkout repository
+        if: github.event_name == 'workflow_dispatch' || steps.timegate.outputs.run == 'true'
         uses: actions/checkout@v4
       - name: Run Matrix Sender
+        if: github.event_name == 'workflow_dispatch' || steps.timegate.outputs.run == 'true'
         working-directory: ./tools/matrix-daily
         env:
           MATRIX_SERVER: ${{ secrets.MATRIX_SERVER }}
