@@ -31,6 +31,11 @@ on:
         description: Run integration tests with tmate debugging enabled
         required: false
         default: false
+    secrets:
+      GH_USERNAME:
+        required: false
+      GH_PAT:
+        required: false
 
 jobs:
   build:
@@ -87,6 +92,9 @@ jobs:
           name: ${{ github.sha }}-build
 
       - name: Run integration tests
+        env:
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: tox -e ${{ inputs.tox-integration-test-targets }} -- --model testing
 
       - name: Get contexts

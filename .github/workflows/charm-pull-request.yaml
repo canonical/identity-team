@@ -39,6 +39,10 @@ on:
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
+      GH_USERNAME:
+        required: false
+      GH_PAT:
+        required: false
 
 jobs:
   linting:
@@ -56,6 +60,9 @@ jobs:
   integration-test:
     name: Integration Tests
     uses: ./.github/workflows/_charm-tests-integration.yaml
+    secrets:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_PAT: ${{ secrets.GH_PAT }}
     with:
       container-name: ${{ inputs.container-name }}
       charm-config-path: ${{ inputs.charm-config-path }}
