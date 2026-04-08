@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.11.0](https://github.com/canonical/identity-team/compare/v1.10.0...v1.11.0) (2026-04-08)
+
+
+### Features
+
+* add portal repos to the list ([80e79c3](https://github.com/canonical/identity-team/commit/80e79c3d305d6eb42368aeec4bf513bb38ef95af))
+* add portal repos to the list ([#96](https://github.com/canonical/identity-team/issues/96)) ([7076b7f](https://github.com/canonical/identity-team/commit/7076b7f8c550670012fdf645de52e0715f148302))
+* define `GH_PAT` and `GH_USERNAME` to pull internal images ([#99](https://github.com/canonical/identity-team/issues/99)) ([e90eb6b](https://github.com/canonical/identity-team/commit/e90eb6b060184e99d8e211bcf9ba51cff7f8a251))
+* define GH_PAT and GH_USERNAME to pull internal images ([e05e85f](https://github.com/canonical/identity-team/commit/e05e85fd7ae02c843ccc4c0a97a900666fb403b7))
+
 ## [1.10.0](https://github.com/canonical/identity-team/compare/v1.9.3...v1.10.0) (2026-01-23)
 
 
