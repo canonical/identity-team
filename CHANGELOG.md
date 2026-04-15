@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/canonical/identity-team/compare/v1.11.0...v1.11.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* support ignored restrictions in rockcraft build ([3d6fcfb](https://github.com/canonical/identity-team/commit/3d6fcfb3dd33a1b480dd20d8eaf0c2e361b72f03))
+
 ## [1.11.0](https://github.com/canonical/identity-team/compare/v1.10.0...v1.11.0) (2026-04-08)
 
 
