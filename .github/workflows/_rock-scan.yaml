@@ -20,6 +20,6 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload scan results to GitHub
-        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3
+        uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
         with:
           sarif_file: 'trivy-results.sarif'
