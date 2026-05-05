@@ -19,6 +19,11 @@ on:
         description: Paths where the artifact have been uploaded. String formatted as a JSON array
         required: true
         type: string
+
+permissions:
+  contents: read  # Required to check out repository code
+  issues: write
+
 jobs:
   inputs-vetting:
     runs-on: ubuntu-latest
@@ -32,24 +37,38 @@ jobs:
     strategy:
       matrix:
         artifact: ${{ fromJson(needs.inputs-vetting.outputs.paths) }}
-    runs-on: [self-hosted, self-hosted-linux-amd64-jammy-private-endpoint-medium]
+    runs-on: [self-hosted-linux-amd64-noble-private-endpoint-medium]
     steps:
       - name: Install secscan cli
         run: |
           sudo snap install canonical-secscan-client
           sudo snap connect canonical-secscan-client:home system:home
+
       - name: Download artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ${{ inputs.artifacts-key }}
+
       - name: Run secscan
         id: secscan
         continue-on-error: true
         run: |
-          echo secscan-result=${{ env.secscan-result }} >> $GITHUB_OUTPUT
-          secscan-client --batch submit --scanner trivy --type ${{ inputs.artifacts-type }} --format ${{ inputs.artifacts-format }} ${{ matrix.artifact }} --wait-and-print | tee ${{ env.secscan-result }}
-        env:
-          secscan-result: secscan.result
+          # Ensure we capture the output even if the command fails
+          secscan-client submit --scanner trivy \
+            --type ${{ inputs.artifacts-type }} \
+            --format ${{ inputs.artifacts-format }} \
+            --token ~/snap/canonical-secscan-client/common/secscan.token \
+            ${{ matrix.artifact }} --wait-and-print --raw 2>&1 | tee secscan.result
+            
+            echo "secscan-result=secscan.result" >> $GITHUB_OUTPUT
+
+      - name: Upload Scan Results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: secscan-report-${{ matrix.artifact }}
+          path: secscan.result
+
       - name: Create issue
         if: steps.secscan.outcome != 'success'
         run: |
@@ -58,4 +77,4 @@ jobs:
           gh issue create -R ${{ github.repository }} --label bug --title "Release compromised by CVE" -F ${{ steps.secscan.outputs.secscan-result}}
         env:
           GH_TOKEN: ${{ github.token }}
-        # enhance the above with actions/github-script@v7
+          # enhance the above with actions/github-script@v7
