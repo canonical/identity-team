@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.2](https://github.com/canonical/identity-team/compare/v1.11.1...v1.11.2) (2026-05-05)
+
+
+### Bug Fixes
+
+* secscan workflow ([1f85bf1](https://github.com/canonical/identity-team/commit/1f85bf1f5b48187aa79b3e95c3c68521ec820af3))
+* secscan workflow ([#103](https://github.com/canonical/identity-team/issues/103)) ([f385d01](https://github.com/canonical/identity-team/commit/f385d01921f4858a662821b68d3910ff78513a54))
+
 ## [1.11.1](https://github.com/canonical/identity-team/compare/v1.11.0...v1.11.1) (2026-04-15)
 
 
