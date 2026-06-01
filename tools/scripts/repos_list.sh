@@ -14,6 +14,10 @@ charms=(
     "openfga-operator"
     "user-verification-service-operator"
     "ubuntu-sso-k8s-operator"
+    "tenant-service-operator"
+    "authentik-server-operator"
+    "authentik-worker-operator"
+    "authentik-ldap-outpost-operator"
 )
 
 rocks=(
