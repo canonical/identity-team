@@ -6,7 +6,8 @@
 # 2. Regenerate the token
 # 3. Update this script to include the new repo
 # 4. Use this script to update the tokens in all our repos
-# 5. Update the script in the repo
+# 5. Update the script and commit in the repo
+# 6. Update the regenerated tokens in Bitwarden for reference
 
 # fail and early return if one or both env var are not set
 if ! ([ -n "$PAT_TOKEN" ] && [ -n "$SCORECARD_TOKEN" ])
@@ -24,4 +25,3 @@ for repo in "${repos[@]}"; do
     gh secret -R https://github.com/canonical/$repo set PAT_TOKEN -b $PAT_TOKEN || true
     gh secret -R https://github.com/canonical/$repo set SCORECARD_TOKEN -b $SCORECARD_TOKEN || true
 done
-

@@ -18,6 +18,7 @@ charms=(
     "authentik-server-operator"
     "authentik-worker-operator"
     "authentik-ldap-outpost-operator"
+    "identity-saml-provider-operator"
 )
 
 rocks=(
