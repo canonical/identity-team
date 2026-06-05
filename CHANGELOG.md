@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.3](https://github.com/canonical/identity-team/compare/v1.11.2...v1.11.3) (2026-06-04)
+
+
+### Bug Fixes
+
+* make permissions explicit for calling workflows to use ([17d39ec](https://github.com/canonical/identity-team/commit/17d39ec47a183f327bb0a178be2dc53ee82c7e54))
+
 ## [1.11.2](https://github.com/canonical/identity-team/compare/v1.11.1...v1.11.2) (2026-05-05)
 
 
