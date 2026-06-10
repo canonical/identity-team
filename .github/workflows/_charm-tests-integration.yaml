@@ -26,6 +26,16 @@ on:
         type: string
         required: false
         default: integration
+      pytest-model-option:
+        description: "CLI option to pass the model name to pytest (use '--juju-model' for pytest-jubilant 2.0)"
+        type: string
+        required: false
+        default: "--model"
+      juju-model-name:
+        description: "Juju model name passed to pytest. With jubilant 2.0 this is a prefix; the actual model is auto-discovered for debug steps."
+        type: string
+        required: false
+        default: "testing"
       debug-enabled:
         type: boolean
         description: Run integration tests with tmate debugging enabled
@@ -95,7 +105,16 @@ jobs:
         env:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_PAT: ${{ secrets.GH_PAT }}
-        run: tox -e ${{ inputs.tox-integration-test-targets }} -- --model testing
+        run: tox -e ${{ inputs.tox-integration-test-targets }} -- ${{ inputs.pytest-model-option }} ${{ inputs.juju-model-name }}
+
+      - name: Resolve actual juju model name
+        id: resolve-model
+        if: always()
+        run: |
+          PREFIX="${{ inputs.juju-model-name }}"
+          # Match exact name (legacy --model) or prefixed name like "testing-abc123" (jubilant 2.0 --juju-model)
+          MODEL=$(juju models --format json | jq -r '.models[]."short-name"' | grep -E "^${PREFIX}(-|$)" | head -1)
+          echo "model=${MODEL:-${PREFIX}}" >> "$GITHUB_OUTPUT"
 
       - name: Get contexts
         if: failure()
@@ -103,7 +122,7 @@ jobs:
 
       - name: Get juju status
         if: failure()
-        run: juju status --relations
+        run: juju status --relations -m ${{ steps.resolve-model.outputs.model }}
 
       - name: Dump logs
         if: failure()
@@ -111,17 +130,17 @@ jobs:
 
       - name: Get juju logs for the charm
         if: ${{ failure() }}
-        run: juju debug-log --replay --include ${{ steps.get-charm-info.outputs.charm-name }}/0
+        run: juju debug-log --replay --include ${{ steps.get-charm-info.outputs.charm-name }}/0 -m ${{ steps.resolve-model.outputs.model }}
 
       - name: Get container logs
         if: ${{ failure() && (inputs.container-name != '') }}
-        run: kubectl logs ${{ steps.get-charm-info.outputs.charm-name }}-0 -c ${{ inputs.container-name }} -n testing
+        run: kubectl logs ${{ steps.get-charm-info.outputs.charm-name }}-0 -c ${{ inputs.container-name }} -n ${{ steps.resolve-model.outputs.model }}
 
       # Hack to overcome lack of tools (cat, tar) in the workload container
       - name: Get config file
         if: ${{ failure() && (inputs.charm-config-path != '') && (inputs.container-name != '') }}
         run: |
-           juju ssh ${{ steps.get-charm-info.outputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ steps.get-charm-info.outputs.charm-name }}-0/charm/venv/ python3 -c '
+           juju ssh -m ${{ steps.resolve-model.outputs.model }} ${{ steps.get-charm-info.outputs.charm-name }}/0 "PYTHONPATH=agents/unit-${{ steps.get-charm-info.outputs.charm-name }}-0/charm/venv/ python3 -c '
            from ops import pebble
            p = pebble.Client(\"/charm/containers/${{ inputs.container-name }}/pebble.socket\")
            f = p.pull(\"${{ inputs.charm-config-path }}\")
