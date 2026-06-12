@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.4](https://github.com/canonical/identity-team/compare/v1.11.3...v1.11.4) (2026-06-12)
+
+
+### Bug Fixes
+
+* add the support to pytest-jubilant 2.0 plugin ([d90257c](https://github.com/canonical/identity-team/commit/d90257ca29eadd63112ce2d1c39bec20c9c48707))
+* add the support to pytest-jubilant 2.0 plugin ([#110](https://github.com/canonical/identity-team/issues/110)) ([b584f42](https://github.com/canonical/identity-team/commit/b584f424ad865d75095e0c911eb2a1a3bb341907))
+
 ## [1.11.3](https://github.com/canonical/identity-team/compare/v1.11.2...v1.11.3) (2026-06-04)
 
 
