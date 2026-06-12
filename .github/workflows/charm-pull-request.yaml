@@ -31,6 +31,16 @@ on:
         type: string
         required: false
         default: integration
+      pytest-model-option:
+        description: "CLI option to pass the model name to pytest (use '--juju-model' for pytest-jubilant 2.0)"
+        type: string
+        required: false
+        default: "--model"
+      juju-model-name:
+        description: "Juju model name passed to pytest. With jubilant 2.0 this is a prefix; the actual model is auto-discovered for debug steps."
+        type: string
+        required: false
+        default: "testing"
       debug-enabled:
         type: boolean
         description: Run integration tests with tmate debugging enabled
@@ -69,6 +79,8 @@ jobs:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
       node-size: ${{ inputs.node-size }}
       tox-integration-test-targets: ${{ inputs.tox-integration-test-targets }}
+      pytest-model-option: ${{ inputs.pytest-model-option }}
+      juju-model-name: ${{ inputs.juju-model-name }}
       debug-enabled: ${{ inputs.debug-enabled }}
     needs:
       - linting
