@@ -57,7 +57,7 @@ jobs:
   daily-message-matrix:
     runs-on: ubuntu-latest
     container:
-      image: golang:1.25
+      image: golang:1.26
     steps:
       - name: Check schedule window
         id: timegate
@@ -91,7 +91,7 @@ jobs:
           fi
       - name: Checkout repository
         if: steps.timegate.outputs.run == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Run Matrix Sender
         if: steps.timegate.outputs.run == 'true'
         working-directory: ./tools/matrix-daily
