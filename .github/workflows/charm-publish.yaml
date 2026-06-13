@@ -35,7 +35,7 @@ jobs:
       channel: ${{ steps.export.outputs.channel }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
       - name: Get current branch
@@ -73,7 +73,7 @@ jobs:
       channel: ${{ steps.parse-inputs.outputs.destination_channel }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
       # Combine inputs from different sources to a single canonical value so later steps don't

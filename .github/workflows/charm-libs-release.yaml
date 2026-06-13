@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
       - name: Release bumped charm library
-        uses: canonical/charming-actions/release-libraries@main
+        uses: canonical/charming-actions/release-libraries@38f996620f6c919bec65bd3a6750eb8b1cceba22 # main
         with:
           credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
           github-token: "${{ secrets.PAT_TOKEN }}"
