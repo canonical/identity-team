@@ -8,6 +8,7 @@ on:
 jobs:
   daily-message-mattermost:
     runs-on: ubuntu-latest
+    if: false
     steps:
       - name: Check schedule window
         id: timegate
@@ -56,8 +57,6 @@ jobs:
 
   daily-message-matrix:
     runs-on: ubuntu-latest
-    container:
-      image: golang:1.25
     steps:
       - name: Check schedule window
         id: timegate
@@ -92,6 +91,12 @@ jobs:
       - name: Checkout repository
         if: steps.timegate.outputs.run == 'true'
         uses: actions/checkout@v4
+      - name: Setup Go
+        if: steps.timegate.outputs.run == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache-dependency-path: tools/matrix-daily/go.sum
       - name: Run Matrix Sender
         if: steps.timegate.outputs.run == 'true'
         working-directory: ./tools/matrix-daily
