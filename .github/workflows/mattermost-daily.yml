@@ -1,8 +1,8 @@
 name: mattermost-daily-message
 on:
   schedule:
-    - cron: '0 7 * * 1-5'
-    - cron: '0 8 * * 1-5'
+    - cron: '30 6 * * 1-5'
+    - cron: '30 7 * * 1-5'
   workflow_dispatch:
 
 jobs:
@@ -22,11 +22,11 @@ jobs:
           # Keep manual runs always available for testing.
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             run=true
-          # Summer time (UTC+2): the 07:00 UTC trigger is the 09:00 local run.
-          elif [ "$paris_offset" = "+0200" ] && [ "$EVENT_SCHEDULE" = "0 7 * * 1-5" ]; then
+          # Summer time (UTC+2): the 06:30 UTC trigger is the 08:30 local run.
+          elif [ "$paris_offset" = "+0200" ] && [ "$EVENT_SCHEDULE" = "30 6 * * 1-5" ]; then
             run=true
-          # Winter time (UTC+1): the 08:00 UTC trigger is the 09:00 local run.
-          elif [ "$paris_offset" = "+0100" ] && [ "$EVENT_SCHEDULE" = "0 8 * * 1-5" ]; then
+          # Winter time (UTC+1): the 07:30 UTC trigger is the 08:30 local run.
+          elif [ "$paris_offset" = "+0100" ] && [ "$EVENT_SCHEDULE" = "30 7 * * 1-5" ]; then
             run=true
           fi
 
@@ -70,11 +70,11 @@ jobs:
           # Keep manual runs always available for testing.
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             run=true
-          # Summer time (UTC+2): the 07:00 UTC trigger is the 09:00 local run.
-          elif [ "$paris_offset" = "+0200" ] && [ "$EVENT_SCHEDULE" = "0 7 * * 1-5" ]; then
+          # Summer time (UTC+2): the 06:30 UTC trigger is the 08:30 local run.
+          elif [ "$paris_offset" = "+0200" ] && [ "$EVENT_SCHEDULE" = "30 6 * * 1-5" ]; then
             run=true
-          # Winter time (UTC+1): the 08:00 UTC trigger is the 09:00 local run.
-          elif [ "$paris_offset" = "+0100" ] && [ "$EVENT_SCHEDULE" = "0 8 * * 1-5" ]; then
+          # Winter time (UTC+1): the 07:30 UTC trigger is the 08:30 local run.
+          elif [ "$paris_offset" = "+0100" ] && [ "$EVENT_SCHEDULE" = "30 7 * * 1-5" ]; then
             run=true
           fi
 
