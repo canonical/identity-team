@@ -3,23 +3,51 @@ name: Release rock Workflow
 on:
   workflow_call:
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  actions: read
+
 jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      architectures: ${{ steps.info.outputs.architectures }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+      - name: Get rock info
+        id: info
+        run: |
+          platforms_json=$(cat rockcraft.yaml | yq '.platforms | keys | tojson')
+          architectures=$(echo "$platforms_json" | jq -c 'unique')
+          echo "architectures=$architectures" >> $GITHUB_OUTPUT
+
   lint:
     name: Lint
     uses: ./.github/workflows/_rock-linting.yaml
 
   build:
-    name: Build
+    name: Build (${{ matrix.architecture }})
     needs:
+      - check
       - lint
+    strategy:
+      matrix:
+        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
     uses: ./.github/workflows/_rock-build.yaml
+    with:
+      architecture: ${{ matrix.architecture }}
 
   publish:
     name: Publish
     if: ${{ (github.ref == 'refs/heads/main') || (github.ref_type == 'tag') }}
     needs:
       - build
-    uses: ./.github/workflows/_rock-publish.yaml
+    uses: ./.github/workflows/_rock-gh-publish.yaml
 
   scan:
     name: Scan
@@ -27,3 +55,5 @@ jobs:
     needs:
       - publish
     uses: ./.github/workflows/_rock-scan.yaml
+    with:
+      image: ${{ needs.publish.outputs.image }}

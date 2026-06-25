@@ -6,8 +6,9 @@ on:
     inputs:
       rock:
         type: string
-        required: true
-        description: "rock path to download"
+        required: false
+        default: ""
+        description: "Specific rock artifact to download. If empty, all rocks in the run will be downloaded and published as a multi-arch image."
     outputs:
       image:
         description: "container image"
@@ -33,35 +34,62 @@ jobs:
       - name: Install Rockcraft to get Skopeo
         run: sudo snap install --classic --channel latest/stable rockcraft
 
-      - name: Upload ROCK to ghcr.io in latest channel
-        id: latest
-        if: ${{ github.ref_type == 'branch' }}
+      - name: Log in to GHCR
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload ROCK to ghcr.io (latest or stable)
         run: |
-          versions=(latest "${{ github.sha }}")
+          if [ "${{ github.ref_type }}" = "branch" ]; then
+            versions=(latest "${{ github.sha }}")
+            image_tag="${{ github.sha }}"
+          else
+            versions=(stable "${{ github.ref_name }}")
+            image_tag="${{ github.ref_name }}"
+          fi
 
-          for version in "${versions[@]}"; do
-            sudo rockcraft.skopeo --insecure-policy copy \
-              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-              oci-archive:$(realpath ./"${{ inputs.rock }}") \
-              docker://ghcr.io/${{ github.repository }}:"${version}"
-          done
+          mapfile -t rocks < <(find . -name "*.rock")
 
-          echo "image=ghcr.io/${{ github.repository }}:${{ github.sha }}" >> "$GITHUB_ENV"
+          if [ ${#rocks[@]} -eq 0 ]; then
+            echo "No rock files found!"
+            exit 1
+          fi
 
-      - name: Upload ROCK to ghcr.io in stable channel
-        id: stable
-        if: ${{ github.ref_type == 'tag' }}
-        run: |
-          versions=(stable "${{ github.ref_name }}")
+          if [ ${#rocks[@]} -eq 1 ]; then
+            # Single rock behavior (original)
+            rock="${rocks[0]}"
+            for version in "${versions[@]}"; do
+              sudo rockcraft.skopeo --insecure-policy copy \
+                --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+                oci-archive:"$(realpath "$rock")" \
+                docker://ghcr.io/${{ github.repository }}:"${version}"
+            done
+          else
+            # Multi-arch behavior
+            for version in "${versions[@]}"; do
+              arch_tags=()
+              for rock in "${rocks[@]}"; do
+                filename=$(basename "$rock")
+                no_ext="${filename%.rock}"
+                arch="${no_ext##*_}"
+                target_tag="${version}-${arch}"
+                arch_tags+=("ghcr.io/${{ github.repository }}:${target_tag}")
+                
+                sudo rockcraft.skopeo --insecure-policy copy \
+                  --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+                  oci-archive:"$(realpath "$rock")" \
+                  docker://ghcr.io/${{ github.repository }}:${target_tag}
+              done
+              
+              docker manifest create --amend ghcr.io/${{ github.repository }}:"${version}" "${arch_tags[@]}"
+              docker manifest push ghcr.io/${{ github.repository }}:"${version}"
+            done
+          fi
 
-          for version in "${versions[@]}"; do
-            sudo rockcraft.skopeo --insecure-policy copy \
-              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-              oci-archive:$(realpath ./"${{ inputs.rock }}") \
-              docker://ghcr.io/${{ github.repository }}:"${version}"
-          done
-
-          echo "image=ghcr.io/${{ github.repository }}:${{ github.ref_name }}" >> "$GITHUB_ENV"
+          echo "image=ghcr.io/${{ github.repository }}:${image_tag}" >> "$GITHUB_ENV"
 
       - name: Set output of image
         id: set

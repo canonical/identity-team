@@ -6,8 +6,9 @@ on:
     inputs:
       rock:
         type: string
-        required: true
-        description: "rock path to download"
+        required: false
+        default: ""
+        description: "Specific rock artifact to download. If empty, all rocks in the run will be downloaded and published as a multi-arch image."
     outputs:
       image:
         description: "container image"
@@ -33,32 +34,54 @@ jobs:
       - name: Install Rockcraft to get Skopeo
         run: sudo snap install --classic --channel latest/stable rockcraft
 
-      - name: Upload ROCK to ghcr.io in latest channel
-        id: latest
-        run: |
-          versions=(latest "${{ github.sha }}")
+      - name: Log in to GHCR
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-          for version in "${versions[@]}"; do
-            sudo rockcraft.skopeo --insecure-policy copy \
-              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-              oci-archive:$(realpath ./"${{ inputs.rock }}") \
-              docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
-          done
-
-          echo "image=ghcr.io/${{ github.repository_owner }}/$image_name:${{ github.sha }}" >> "$GITHUB_ENV"
-
-      - name: Upload ROCK to ghcr.io in stable channel
-        id: stable
+      - name: Upload ROCK to ghcr.io (latest or stable)
         run: |
           image_tag=$(yq -r '.version' rockcraft.yaml)
-          versions=(stable $image_tag)
+          versions=(latest "${{ github.sha }}" stable "$image_tag")
+          mapfile -t rocks < <(find . -name "*.rock")
 
-          for version in "${versions[@]}"; do
-            sudo rockcraft.skopeo --insecure-policy copy \
-              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
-              oci-archive:$(realpath ./"${{ inputs.rock }}") \
-              docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
-          done
+          if [ ${#rocks[@]} -eq 0 ]; then
+            echo "No rock files found!"
+            exit 1
+          fi
+
+          if [ ${#rocks[@]} -eq 1 ]; then
+            # Single rock behavior (original fallback)
+            rock="${rocks[0]}"
+            for version in "${versions[@]}"; do
+              sudo rockcraft.skopeo --insecure-policy copy \
+                --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+                oci-archive:"$(realpath "$rock")" \
+                docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
+            done
+          else
+            # Multi-arch behavior
+            for version in "${versions[@]}"; do
+              arch_tags=()
+              for rock in "${rocks[@]}"; do
+                filename=$(basename "$rock")
+                no_ext="${filename%.rock}"
+                arch="${no_ext##*_}"
+                target_tag="${version}-${arch}"
+                arch_tags+=("ghcr.io/${{ github.repository_owner }}/$image_name:${target_tag}")
+                
+                sudo rockcraft.skopeo --insecure-policy copy \
+                  --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+                  oci-archive:"$(realpath "$rock")" \
+                  docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${target_tag}"
+              done
+              
+              docker manifest create --amend ghcr.io/${{ github.repository_owner }}/$image_name:"${version}" "${arch_tags[@]}"
+              docker manifest push ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
+            done
+          fi
 
           echo "image=ghcr.io/${{ github.repository_owner }}/$image_name:$image_tag" >> "$GITHUB_ENV"
 
