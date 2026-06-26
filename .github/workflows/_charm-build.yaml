@@ -12,6 +12,16 @@ on:
         required: false
         default: latest/stable
         type: string
+      architecture:
+        description: Target architecture to build for (e.g. amd64 or arm64)
+        required: false
+        default: amd64
+        type: string
+      runner:
+        description: Override the runner to run on. If empty, standard native runners are used.
+        required: false
+        default: ""
+        type: string
     outputs:
       name:
         description: The charm name
@@ -28,7 +38,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner != '' && inputs.runner || (inputs.architecture == 'arm64' && 'self-hosted-linux-arm64-noble-medium' || 'ubuntu-latest') }}
     outputs:
       name: ${{ steps.get-charm-info.outputs.charm-name }}
       platforms: ${{ steps.get-charm-info.outputs.charm-platforms }}
@@ -64,9 +74,9 @@ jobs:
       - name: Get charm paths
         id: get-charm-paths
         run: |
-          echo charm-paths=$(echo '${{ steps.get-charm-info.outputs.charm-platforms }}' | jq -r --arg charm ${{ steps.get-charm-info.outputs.charm-name }} '.[] |= split(":") | .[] |= join("-", .) | map($charm + "_" + . + ".charm") | join(",")') >> $GITHUB_OUTPUT
+          echo charm-paths=$(echo '${{ steps.get-charm-info.outputs.charm-platforms }}' | jq -r --arg charm ${{ steps.get-charm-info.outputs.charm-name }} --arg arch ${{ inputs.architecture }} 'map(select(contains($arch))) | .[] |= split(":") | .[] |= join("-", .) | map($charm + "_" + . + ".charm") | join(",")') >> $GITHUB_OUTPUT
       - id: artifact-name
-        run: echo artifact='${{ github.sha }}-${{ github.job }}' >> $GITHUB_OUTPUT
+        run: echo artifact='${{ github.sha }}-${{ github.job }}-${{ inputs.architecture }}' >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ steps.artifact-name.outputs.artifact }}

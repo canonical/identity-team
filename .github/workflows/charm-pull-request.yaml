@@ -55,6 +55,22 @@ on:
         required: false
 
 jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      architectures: ${{ steps.info.outputs.architectures }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+      - name: Get charm info
+        id: info
+        run: |
+          platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
+          architectures=$(echo "$platforms_json" | jq -c 'map(split(":") | last) | unique')
+          echo "architectures=$architectures" >> $GITHUB_OUTPUT
+
   linting:
     name: Linting
     uses: ./.github/workflows/_charm-linting.yaml
@@ -68,7 +84,14 @@ jobs:
       - linting
 
   integration-test:
-    name: Integration Tests
+    name: Integration Tests (${{ matrix.architecture }})
+    needs:
+      - linting
+      - unit-test
+      - check
+    strategy:
+      matrix:
+        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
     uses: ./.github/workflows/_charm-tests-integration.yaml
     secrets:
       GH_USERNAME: ${{ secrets.GH_USERNAME }}
@@ -82,6 +105,4 @@ jobs:
       pytest-model-option: ${{ inputs.pytest-model-option }}
       juju-model-name: ${{ inputs.juju-model-name }}
       debug-enabled: ${{ inputs.debug-enabled }}
-    needs:
-      - linting
-      - unit-test
+      architecture: ${{ matrix.architecture }}
