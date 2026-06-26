@@ -41,6 +41,11 @@ on:
         description: Run integration tests with tmate debugging enabled
         required: false
         default: false
+      architecture:
+        description: Target architecture to test for (e.g. amd64 or arm64)
+        required: false
+        default: amd64
+        type: string
     secrets:
       GH_USERNAME:
         required: false
@@ -49,10 +54,11 @@ on:
 
 jobs:
   build:
-    name: Build charm
+    name: Build charm (${{ inputs.architecture }})
     uses: ./.github/workflows/_charm-build.yaml
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+      architecture: ${{ inputs.architecture }}
 
   node-size-validation:
     runs-on: ubuntu-latest
@@ -63,8 +69,8 @@ jobs:
         run: exit 1
 
   integration-test:
-    name: Integration Tests (microk8s)
-    runs-on: [self-hosted, amd64, "${{ inputs.node-size }}", jammy]
+    name: Integration Tests (microk8s) (${{ inputs.architecture }})
+    runs-on: ${{ fromJSON(format('["self-hosted", "{0}", "{1}", "noble"]', inputs.architecture, inputs.node-size)) }}
     needs:
       - build
       - node-size-validation
@@ -99,7 +105,7 @@ jobs:
       - name: Download charm artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: ${{ github.sha }}-build
+          name: ${{ github.sha }}-build-${{ inputs.architecture }}
 
       - name: Run integration tests
         env:

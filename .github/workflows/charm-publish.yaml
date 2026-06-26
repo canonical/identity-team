@@ -33,11 +33,26 @@ jobs:
     outputs:
       track: ${{ steps.check_step.outputs.track }}
       channel: ${{ steps.export.outputs.channel }}
+      charm-name: ${{ steps.info.outputs.charm-name }}
+      architectures: ${{ steps.info.outputs.architectures }}
+      architecture-paths-map: ${{ steps.info.outputs.architecture-paths-map }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
+      - name: Get charm info
+        id: info
+        run: |
+          charm_name=$(cat charmcraft.yaml | yq '.name')
+          platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
+          
+          architectures=$(echo "$platforms_json" | jq -c 'map(split(":") | last) | unique')
+          architecture_paths_map=$(echo "$platforms_json" | jq -c --arg charm "$charm_name" 'reduce .[] as $item ({}; ($item | split(":") | last) as $arch | ($item | split(":") | join("-")) as $plat | ($charm + "_" + $plat + ".charm") as $path | .[$arch] += (if .[$arch] then "," else "" end + $path))')
+          
+          echo "charm-name=$charm_name" >> $GITHUB_OUTPUT
+          echo "architectures=$architectures" >> $GITHUB_OUTPUT
+          echo "architecture-paths-map=$architecture_paths_map" >> $GITHUB_OUTPUT
       - name: Get current branch
         id: check_step
         run: "sudo snap install jq --channel latest/edge \n\ntrack=$(echo ${{ github.ref }} | jq -R | jq 'split(\"-\")[0]' | jq 'sub(\"refs/tags/\"; \"\")' | jq 'split(\"/\")[1]')\necho \"track=$track\" >> $GITHUB_OUTPUT\necho \"Track is $track.\"  \n"
@@ -51,17 +66,25 @@ jobs:
         id: export
         run: echo channel=${{ env.channel }} >> $GITHUB_OUTPUT
   build:
-    name: Build charm
+    name: Build charm (${{ matrix.architecture }})
+    needs: check
+    strategy:
+      matrix:
+        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
     uses: ./.github/workflows/_charm-build.yaml
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+      architecture: ${{ matrix.architecture }}
   scan:
-    needs: build
+    needs: [build, check]
+    strategy:
+      matrix:
+        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
     uses: ./.github/workflows/_secscan.yaml
     with:
       artifacts-format: charm
-      artifacts-key: ${{ needs.build.outputs.artifacts-key }}
-      artifact-paths: ${{ needs.build.outputs.charm-paths }}
+      artifacts-key: ${{ github.sha }}-build-${{ matrix.architecture }}
+      artifact-paths: ${{ fromJson(needs.check.outputs.architecture-paths-map)[matrix.architecture] }}
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-24.04
@@ -87,7 +110,11 @@ jobs:
           echo "destination_channel=$destination_channel" >> $GITHUB_OUTPUT
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: ${{ needs.build.outputs.artifacts-key }}
+          path: downloaded-charms/
+      - name: Flatten and stage charms
+        run: |
+          find downloaded-charms/ -name "*.charm" -exec cp {} . \;
+          echo "files=$(find . -maxdepth 1 -name "*.charm" -printf '%P ')" >> $GITHUB_ENV
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
@@ -95,10 +122,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           destructive-mode: false
-          built-charm-path: ${{ needs.build.outputs.charm-paths}}
           github-tag: false
-      - run: echo "files=$(echo ${{ needs.build.outputs.charm-paths}} | jq -R -r '. | sub(","; " ")')" >> $GITHUB_ENV
       - name: Upload charms to release
-        run: gh release upload ${{ github.ref_name}} ${{ env.files }}
+        run: gh release upload ${{ github.ref_name }} ${{ env.files }}
         env:
           GH_TOKEN: ${{ github.token }}
