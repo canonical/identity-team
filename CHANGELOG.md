@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/canonical/identity-team/compare/v1.12.0...v1.12.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* publish action ([db03484](https://github.com/canonical/identity-team/commit/db03484820645ad51eeebf1b23e1fbcfb1f143f5))
+* publish action ([#119](https://github.com/canonical/identity-team/issues/119)) ([871c42c](https://github.com/canonical/identity-team/commit/871c42c44fab4433f824807600a7f8997b38c781))
+
 ## [1.12.0](https://github.com/canonical/identity-team/compare/v1.11.4...v1.12.0) (2026-06-26)
 
 
