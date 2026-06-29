@@ -51,7 +51,7 @@ jobs:
             image_tag="${{ github.ref_name }}"
           fi
 
-          mapfile -t rocks < <(find . -name "*.rock")
+          mapfile -t rocks < <(find . -name "*.rock" -type f)
 
           if [ ${#rocks[@]} -eq 0 ]; then
             echo "No rock files found!"

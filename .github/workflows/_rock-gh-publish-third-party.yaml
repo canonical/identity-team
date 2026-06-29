@@ -45,7 +45,7 @@ jobs:
         run: |
           image_tag=$(yq -r '.version' rockcraft.yaml)
           versions=(latest "${{ github.sha }}" stable "$image_tag")
-          mapfile -t rocks < <(find . -name "*.rock")
+          mapfile -t rocks < <(find . -name "*.rock" -type f)
 
           if [ ${#rocks[@]} -eq 0 ]; then
             echo "No rock files found!"
