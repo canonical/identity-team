@@ -113,8 +113,8 @@ jobs:
           path: downloaded-charms/
       - name: Flatten and stage charms
         run: |
-          find downloaded-charms/ -name "*.charm" -exec cp {} . \;
-          echo "files=$(find . -maxdepth 1 -name "*.charm" -printf '%P ')" >> $GITHUB_ENV
+          find downloaded-charms/ -name "*.charm" -type f -exec cp {} . \;
+          echo "files=$(find . -maxdepth 1 -name "*.charm" -type f -printf '%P ')" >> $GITHUB_ENV
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
