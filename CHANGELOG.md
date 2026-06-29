@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.12.0](https://github.com/canonical/identity-team/compare/v1.11.4...v1.12.0) (2026-06-26)
+
+
+### Features
+
+* add multiple architectures support for charms ([b9be937](https://github.com/canonical/identity-team/commit/b9be937ced989e56d6e789cbc1108e90b978e529))
+* add multiple architectures support for rocks ([7b7b71a](https://github.com/canonical/identity-team/commit/7b7b71abd51099d9887aa94027f5037baca4030b))
+* support multiple architectures ([#117](https://github.com/canonical/identity-team/issues/117)) ([b13995d](https://github.com/canonical/identity-team/commit/b13995d608e7183c82bf23a6ea3d9a1ed82544ce))
+
 ## [1.11.4](https://github.com/canonical/identity-team/compare/v1.11.3...v1.11.4) (2026-06-12)
 
 
