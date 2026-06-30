@@ -46,6 +46,16 @@ on:
         description: Run integration tests with tmate debugging enabled
         required: false
         default: false
+      use-canonical-k8s:
+        type: boolean
+        description: Whether to use canonical k8s instead of microk8s
+        default: false
+      modules:
+        description: |
+          List of testing modules to run the tests in JSON format, i.e. '["foo", "bar"]'.
+          Each element will be passed to pytest through tox as -k argument.
+        type: string
+        default: '["test_charm.py"]'
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -55,6 +65,14 @@ on:
         required: false
 
 jobs:
+  node-size-validation:
+    runs-on: ubuntu-latest
+    name: Input Node Size validation
+    steps:
+      - name: Validate node size variable
+        if: ${{ !contains(fromJSON('["medium", "large", "xlarge"]'), inputs.node-size) }}
+        run: exit 1
+
   check:
     runs-on: ubuntu-24.04
     outputs:
@@ -85,24 +103,35 @@ jobs:
 
   integration-test:
     name: Integration Tests (${{ matrix.architecture }})
+    uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
     needs:
+      - node-size-validation
       - linting
       - unit-test
       - check
-    strategy:
-      matrix:
-        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
-    uses: ./.github/workflows/_charm-tests-integration.yaml
     secrets:
       GH_USERNAME: ${{ secrets.GH_USERNAME }}
       GH_PAT: ${{ secrets.GH_PAT }}
+    strategy:
+      matrix:
+        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
     with:
-      container-name: ${{ inputs.container-name }}
-      charm-config-path: ${{ inputs.charm-config-path }}
-      use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
-      node-size: ${{ inputs.node-size }}
-      tox-integration-test-targets: ${{ inputs.tox-integration-test-targets }}
-      pytest-model-option: ${{ inputs.pytest-model-option }}
-      juju-model-name: ${{ inputs.juju-model-name }}
-      debug-enabled: ${{ inputs.debug-enabled }}
-      architecture: ${{ matrix.architecture }}
+      # container-name: ${{ inputs.container-name }}
+      # charm-config-path: ${{ inputs.charm-config-path }}
+      # pytest-model-option: ${{ inputs.pytest-model-option }}
+      # juju-model-name: ${{ inputs.juju-model-name }}
+      # debug-enabled: ${{ inputs.debug-enabled }}
+      use-canonical-k8s: ${{ inputs.use-canonical-k8s }}
+      provider: ${{ inputs.use-canonical-k8s && 'k8s' || 'microk8s' }}
+      channel: ${{ inputs.use-canonical-k8s && 'edge' || '1.32-strict/stable' }}
+      microk8s-addons: ${{ inputs.use-canonical-k8s && '' || 'dns hostpath-storage metallb:10.64.140.43-10.64.140.49' }}
+      extra-arguments: |
+        --kube-config=~/.kube/config
+      juju-channel: 3.6/stable
+      self-hosted-runner: true
+      self-hosted-runner-label: ${{ inputs.node-size }}
+      self-hosted-runner-arch: ${{ matrix.architecture }}
+      self-hosted-runner-image: noble
+      test-tox-env: ${{ inputs.tox-integration-test-targets }}
+      modules: ${{ inputs.modules }}
+      # charmcraftcache: ${{ inputs.use-charmcraftcache }} # support was dropped, see https://github.com/canonical/operator-workflows/pull/978
