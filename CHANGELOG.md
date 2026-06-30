@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.2](https://github.com/canonical/identity-team/compare/v1.12.1...v1.12.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* add package permissions ([24e7eab](https://github.com/canonical/identity-team/commit/24e7eab22fb5cb5ce28425f659163521322cf287))
+* add package permissions ([#121](https://github.com/canonical/identity-team/issues/121)) ([e719bb4](https://github.com/canonical/identity-team/commit/e719bb487fcf359ca9e1dd8c0f64ebd330089541))
+
 ## [1.12.1](https://github.com/canonical/identity-team/compare/v1.12.0...v1.12.1) (2026-06-29)
 
 
