@@ -70,7 +70,7 @@ jobs:
 
   integration-test:
     name: Integration Tests (microk8s) (${{ inputs.architecture }})
-    runs-on: ${{ fromJSON(format('["self-hosted", "{0}", "{1}", "noble"]', inputs.architecture, inputs.node-size)) }}
+    runs-on: ${{ fromJSON(format('["self-hosted", "{0}", "{1}", "jammy"]', inputs.architecture, inputs.node-size)) }}
     needs:
       - build
       - node-size-validation
