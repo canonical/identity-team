@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.0](https://github.com/canonical/identity-team/compare/v1.12.2...v1.13.0) (2026-07-01)
+
+
+### Features
+
+* add `multi-arch` parameter ([#123](https://github.com/canonical/identity-team/issues/123)) ([b67c3ec](https://github.com/canonical/identity-team/commit/b67c3ec69a92437364770032b53279e305081aa8))
+* add multi-arch parameter ([542327d](https://github.com/canonical/identity-team/commit/542327df3162c26d4ab2ffd603c831b8d35e36c4))
+
 ## [1.12.2](https://github.com/canonical/identity-team/compare/v1.12.1...v1.12.2) (2026-06-30)
 
 
