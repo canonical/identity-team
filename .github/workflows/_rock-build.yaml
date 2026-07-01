@@ -37,9 +37,9 @@ jobs:
       rock: ${{ steps.rockcraft.outputs.rock }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: canonical/craft-actions/rockcraft-pack@main
+      - uses: canonical/craft-actions/rockcraft-pack@5e6ad41de1463e26f4d236b5f199423865f2814c # main
         id: rockcraft
         with:
           ignore: ${{ inputs.ignore-restrictions }}
