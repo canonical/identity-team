@@ -46,6 +46,11 @@ on:
         description: Run integration tests with tmate debugging enabled
         required: false
         default: false
+      multi-arch:
+        description: Run integration tests on all architectures defined in the platforms of charmcraft.yaml
+        required: false
+        default: false
+        type: boolean
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -58,13 +63,15 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     outputs:
-      architectures: ${{ steps.info.outputs.architectures }}
+      architectures: ${{ inputs.multi-arch && steps.info.outputs.architectures || '["amd64"]' }}
     steps:
       - name: Checkout
+        if: ${{ inputs.multi-arch }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
       - name: Get charm info
+        if: ${{ inputs.multi-arch }}
         id: info
         run: |
           platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
