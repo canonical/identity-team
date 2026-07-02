@@ -56,11 +56,21 @@ jobs:
       - name: Install charmcraft
         run: |
           sudo snap install charmcraft --classic --channel ${{ inputs.charmcraft-channel }}
+          if ! command -v yq &> /dev/null; then
+            sudo snap install yq
+          fi
+          if ! command -v jq &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
           echo CHARMCRAFT_BIN=charmcraft >> $GITHUB_ENV
       - name: Install charmcraftcache
         if: ${{ inputs.use-charmcraftcache }}
         run: |
+          if ! command -v pipx &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y pipx
+          fi
           pipx install charmcraftcache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           echo CHARMCRAFT_BIN=ccc >> $GITHUB_ENV
       - name: Build charm
         run: ${{ env.CHARMCRAFT_BIN}} pack -v
