@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/canonical/identity-team/compare/v1.13.0...v1.14.0) (2026-07-02)
+
+
+### Features
+
+* install dependencies if missing ([#125](https://github.com/canonical/identity-team/issues/125)) ([ce52da3](https://github.com/canonical/identity-team/commit/ce52da38ecf49eae11829a3d0c165a63b67bd08e))
+* install pipx and yq if missing ([bcdec69](https://github.com/canonical/identity-team/commit/bcdec698e9c15c68bb6c88c2d9070c05cbe0f94f))
+
 ## [1.13.0](https://github.com/canonical/identity-team/compare/v1.12.2...v1.13.0) (2026-07-01)
 
 
