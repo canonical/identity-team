@@ -114,16 +114,21 @@ jobs:
       - name: Flatten and stage charms
         run: |
           find downloaded-charms/ -name "*.charm" -type f -exec cp {} . \;
+
+          # 1. Create a space-separated list for the 'gh release upload' command
           echo "files=$(find . -maxdepth 1 -name "*.charm" -type f -printf '%P ')" >> $GITHUB_ENV
+          # 2. Create a comma-separated list for the 'upload-charm' action
+          echo "charms_list=$(find . -maxdepth 1 -name "*.charm" -type f -printf '%P\n' | paste -sd, -)" >> $GITHUB_ENV
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
           credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
+          built-charm-path: ${{ env.charms_list }}
           destructive-mode: false
           github-tag: false
       - name: Upload charms to release
-        run: gh release upload ${{ github.ref_name }} ${{ env.files }}
+        run: gh release upload ${{ github.ref_name }} ${{ env.files }} --clobber
         env:
           GH_TOKEN: ${{ github.token }}
