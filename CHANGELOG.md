@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.1](https://github.com/canonical/identity-team/compare/v1.14.0...v1.14.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* publish workflow ([4ac4e1c](https://github.com/canonical/identity-team/commit/4ac4e1c73fb1d0f9caa41010af08908ba991ad8a))
+* publish workflow ([#128](https://github.com/canonical/identity-team/issues/128)) ([cad64e6](https://github.com/canonical/identity-team/commit/cad64e67d5961d13fc00e89e6b7b64c9d0834570))
+
 ## [1.14.0](https://github.com/canonical/identity-team/compare/v1.13.0...v1.14.0) (2026-07-02)
 
 
