@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.2](https://github.com/canonical/identity-team/compare/v1.14.1...v1.14.2) (2026-07-08)
+
+
+### Bug Fixes
+
+* upload multi-architecture oci resource ([089ede3](https://github.com/canonical/identity-team/commit/089ede35177ddb25b8d0c13cdb030e13dfdf9ed9))
+* upload multi-architecture oci resource ([#130](https://github.com/canonical/identity-team/issues/130)) ([2e42857](https://github.com/canonical/identity-team/commit/2e42857e32972e98e577dbeadbcc05234e5b311e))
+
 ## [1.14.1](https://github.com/canonical/identity-team/compare/v1.14.0...v1.14.1) (2026-07-07)
 
 
