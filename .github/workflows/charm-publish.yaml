@@ -119,6 +119,54 @@ jobs:
           echo "files=$(find . -maxdepth 1 -name "*.charm" -type f -printf '%P ')" >> $GITHUB_ENV
           # 2. Create a comma-separated list for the 'upload-charm' action
           echo "charms_list=$(find . -maxdepth 1 -name "*.charm" -type f -printf '%P\n' | paste -sd, -)" >> $GITHUB_ENV
+      - name: Upload multi-architecture OCI resources
+        run: |
+          # Parse OCI resources safely from available metadata files
+          OCI_RESOURCES=$(yq '.resources // {} | to_entries | .[] | select(.value.type == "oci-image") | .key + "=" + .value.upstream-source' charmcraft.yaml metadata.yaml 2>/dev/null || true)
+          
+          if [ -n "$OCI_RESOURCES" ]; then
+            sudo snap install charmcraft --classic --channel latest/stable
+          
+            CHARM_NAME=$(yq '.name' charmcraft.yaml metadata.yaml 2>/dev/null | head -n 1)
+          
+            # Map the array output from the check job
+            CHARM_ARCHS=$(echo '${{ needs.check.outputs.architectures }}' | jq -r 'join(",")')
+            echo "Dynamic target architectures: $CHARM_ARCHS"
+          
+            RESOURCE_OVERRIDES=""
+            for entry in $OCI_RESOURCES; do
+              RESOURCE_NAME="${entry%%=*}"
+              UPSTREAM_SOURCE="${entry#*=}"
+          
+              if [ -n "$UPSTREAM_SOURCE" ] && [ "$UPSTREAM_SOURCE" != "null" ]; then
+                # Ensure the image reference is a valid container transport string by adding docker:// prefix if needed
+                if [[ "$UPSTREAM_SOURCE" != *"://"* ]]; then
+                  IMAGE_REF="docker://$UPSTREAM_SOURCE"
+                else
+                  IMAGE_REF="$UPSTREAM_SOURCE"
+                fi
+
+                echo "Uploading $IMAGE_REF as $RESOURCE_NAME..."
+                UPLOAD_OUT=$(charmcraft upload-resource --format json "$CHARM_NAME" "$RESOURCE_NAME" --image="$IMAGE_REF")
+                REVISION=$(echo "$UPLOAD_OUT" | jq -r '.revision')
+                echo "Uploaded revision: $REVISION"
+          
+                echo "Enabling multi-arch compatibility ($CHARM_ARCHS) for revision $REVISION..."
+                charmcraft set-resource-architectures "$CHARM_NAME" "$RESOURCE_NAME" --revision="$REVISION" "$CHARM_ARCHS"
+          
+                if [ -n "$RESOURCE_OVERRIDES" ]; then
+                  RESOURCE_OVERRIDES="${RESOURCE_OVERRIDES},"
+                fi
+                RESOURCE_OVERRIDES="${RESOURCE_OVERRIDES}${RESOURCE_NAME}:${REVISION}"
+              fi
+            done
+          
+            echo "RESOURCE_OVERRIDES=$RESOURCE_OVERRIDES" >> $GITHUB_ENV
+            echo "Configured resource overrides: $RESOURCE_OVERRIDES"
+          fi
+        env:
+          CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
@@ -128,6 +176,8 @@ jobs:
           built-charm-path: ${{ env.charms_list }}
           destructive-mode: false
           github-tag: false
+          upload-image: false
+          resource-overrides: ${{ env.RESOURCE_OVERRIDES }}
       - name: Upload charms to release
         run: gh release upload ${{ github.ref_name }} ${{ env.files }} --clobber
         env:
