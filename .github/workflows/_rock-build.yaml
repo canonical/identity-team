@@ -39,7 +39,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - uses: canonical/craft-actions/rockcraft-pack@main
+      - uses: canonical/craft-actions/rockcraft/pack@main
         id: rockcraft
         with:
           ignore: ${{ inputs.ignore-restrictions }}
