@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.3](https://github.com/canonical/identity-team/compare/v1.14.2...v1.14.3) (2026-07-17)
+
+
+### Bug Fixes
+
+* migrate rockcraft-pack action ([6542c2d](https://github.com/canonical/identity-team/commit/6542c2dfe20b53ab00470f2df96e53264542833c))
+* pin canonical/craft-actions to v0.1.1 ([bcc360c](https://github.com/canonical/identity-team/commit/bcc360c16d8e55a8fc244755c656ea783fee1e4b))
+* pin canonical/craft-actions to v0.1.1 ([#137](https://github.com/canonical/identity-team/issues/137)) ([f859f1d](https://github.com/canonical/identity-team/commit/f859f1d541b16da425c27d6f8b2e5aee7040e7f6))
+
 ## [1.14.2](https://github.com/canonical/identity-team/compare/v1.14.1...v1.14.2) (2026-07-08)
 
 
