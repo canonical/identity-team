@@ -51,6 +51,16 @@ on:
         required: false
         default: false
         type: boolean
+      base:
+        description: Ubuntu base to run/build on (e.g. 22.04, 24.04, 26.04)
+        required: false
+        default: "22.04"
+        type: string
+      k8s-channel:
+        description: "The channel of Charmed Kubernetes or MicroK8s to install"
+        type: string
+        required: false
+        default: "1.32-strict/stable"
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -61,7 +71,7 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-${{ inputs.base }}
     outputs:
       architectures: ${{ inputs.multi-arch && steps.info.outputs.architectures || '["amd64"]' }}
     steps:
@@ -74,24 +84,41 @@ jobs:
         if: ${{ inputs.multi-arch }}
         id: info
         run: |
+          charm_base=$(cat charmcraft.yaml | yq '.base // ""')
           platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
-          architectures=$(echo "$platforms_json" | jq -c 'map(split(":") | last) | unique')
+          architectures=$(echo "$platforms_json" | jq -c --arg base "ubuntu@${{ inputs.base }}" --arg charm_base "$charm_base" '
+            map(
+              select(
+                if contains(":") then
+                  (split(":") | first) == $base
+                else
+                  $charm_base == $base
+                end
+              ) |
+              split(":") |
+              last
+            ) |
+            unique
+          ')
           echo "architectures=$architectures" >> $GITHUB_OUTPUT
 
   linting:
     name: Linting
     uses: ./.github/workflows/_charm-linting.yaml
+    with:
+      base: ${{ inputs.base }}
 
   unit-test:
     name: Unit Tests
     uses: ./.github/workflows/_charm-tests-unit.yaml
     with:
       tox-unit-test-targets: ${{ inputs.tox-unit-test-targets }}
+      base: ${{ inputs.base }}
     needs:
       - linting
 
   integration-test:
-    name: Integration Tests (${{ matrix.architecture }})
+    name: Integration Tests (${{ inputs.base }} | ${{ matrix.architecture }})
     needs:
       - linting
       - unit-test
@@ -113,3 +140,5 @@ jobs:
       juju-model-name: ${{ inputs.juju-model-name }}
       debug-enabled: ${{ inputs.debug-enabled }}
       architecture: ${{ matrix.architecture }}
+      base: ${{ inputs.base }}
+      k8s-channel: ${{ inputs.k8s-channel }}

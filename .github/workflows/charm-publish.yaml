@@ -35,7 +35,7 @@ jobs:
       channel: ${{ steps.export.outputs.channel }}
       charm-name: ${{ steps.info.outputs.charm-name }}
       architectures: ${{ steps.info.outputs.architectures }}
-      architecture-paths-map: ${{ steps.info.outputs.architecture-paths-map }}
+      platforms: ${{ steps.info.outputs.platforms }}
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -45,14 +45,34 @@ jobs:
         id: info
         run: |
           charm_name=$(cat charmcraft.yaml | yq '.name')
+          charm_base=$(cat charmcraft.yaml | yq '.base // ""')
           platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
-          
-          architectures=$(echo "$platforms_json" | jq -c 'map(split(":") | last) | unique')
-          architecture_paths_map=$(echo "$platforms_json" | jq -c --arg charm "$charm_name" 'reduce .[] as $item ({}; ($item | split(":") | last) as $arch | ($item | split(":") | join("-")) as $plat | ($charm + "_" + $plat + ".charm") as $path | .[$arch] += (if .[$arch] then "," else "" end + $path))')
-          
+
+          platforms=$(echo "$platforms_json" | jq -c --arg charm "$charm_name" --arg charm_base "$charm_base" '
+            map(. as $platform |
+              if ($platform | contains(":")) then
+                ($platform | split(":")) as $parts |
+                {
+                  base: ($parts[0] | sub("^ubuntu@"; "")),
+                  architecture: $parts[-1],
+                  charm_path: ($charm + "_" + ($platform | gsub(":"; "-")) + ".charm")
+                }
+              elif $charm_base != "" then
+                {
+                  base: ($charm_base | sub("^ubuntu@"; "")),
+                  architecture: $platform,
+                  charm_path: ($charm + "_" + $platform + ".charm")
+                }
+              else
+                error("A top-level base is required for shorthand platform names")
+              end
+            )
+          ')
+          architectures=$(echo "$platforms" | jq -c 'map(.architecture) | unique')
+
           echo "charm-name=$charm_name" >> $GITHUB_OUTPUT
           echo "architectures=$architectures" >> $GITHUB_OUTPUT
-          echo "architecture-paths-map=$architecture_paths_map" >> $GITHUB_OUTPUT
+          echo "platforms=$platforms" >> $GITHUB_OUTPUT
       - name: Get current branch
         id: check_step
         run: "sudo snap install jq --channel latest/edge \n\ntrack=$(echo ${{ github.ref }} | jq -R | jq 'split(\"-\")[0]' | jq 'sub(\"refs/tags/\"; \"\")' | jq 'split(\"/\")[1]')\necho \"track=$track\" >> $GITHUB_OUTPUT\necho \"Track is $track.\"  \n"
@@ -66,25 +86,28 @@ jobs:
         id: export
         run: echo channel=${{ env.channel }} >> $GITHUB_OUTPUT
   build:
-    name: Build charm (${{ matrix.architecture }})
+    name: Build charm (${{ matrix.platform.base }} | ${{ matrix.platform.architecture }})
     needs: check
     strategy:
+      fail-fast: false
       matrix:
-        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
+        platform: ${{ fromJson(needs.check.outputs.platforms) }}
     uses: ./.github/workflows/_charm-build.yaml
     with:
       use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
-      architecture: ${{ matrix.architecture }}
+      architecture: ${{ matrix.platform.architecture }}
+      base: ${{ matrix.platform.base }}
   scan:
     needs: [build, check]
     strategy:
+      fail-fast: false
       matrix:
-        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
+        platform: ${{ fromJson(needs.check.outputs.platforms) }}
     uses: ./.github/workflows/_secscan.yaml
     with:
       artifacts-format: charm
-      artifacts-key: ${{ github.sha }}-build-${{ matrix.architecture }}
-      artifact-paths: ${{ fromJson(needs.check.outputs.architecture-paths-map)[matrix.architecture] }}
+      artifacts-key: ${{ github.sha }}-build-${{ matrix.platform.base }}-${{ matrix.platform.architecture }}
+      artifact-paths: ${{ matrix.platform.charm_path }}
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-24.04
