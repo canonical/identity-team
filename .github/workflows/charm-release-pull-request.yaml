@@ -1,0 +1,142 @@
+# Run pre-release integration tests for all supported architectures and bases. Lint and unit tests are run once, on the base defined in the workflow input.
+name: Release Pull Request Workflow
+
+on:
+  workflow_call:
+    inputs:
+      container-name:
+        description: Name of the application container to get logs from
+        required: false
+        type: string
+      charm-config-path:
+        description: Path to the application config file
+        required: false
+        type: string
+      use-charmcraftcache:
+        description: Enable usage of charmcraftcache
+        required: false
+        default: false
+        type: boolean
+      node-size:
+        description: Size of the self-hosted node (one of medium, large or xlarge) to run the integration tests
+        type: string
+        required: false
+        default: large
+      tox-unit-test-targets:
+        description: Comma separated list of tox targets needed to perform unit-tests
+        type: string
+        required: false
+        default: unit
+      tox-integration-test-targets:
+        description: Comma separated list of tox targets needed to perform integration-tests
+        type: string
+        required: false
+        default: integration
+      pytest-model-option:
+        description: "CLI option to pass the model name to pytest (use '--juju-model' for pytest-jubilant 2.0)"
+        type: string
+        required: false
+        default: "--model"
+      juju-model-name:
+        description: "Juju model name passed to pytest. With jubilant 2.0 this is a prefix; the actual model is auto-discovered for debug steps."
+        type: string
+        required: false
+        default: "testing"
+      debug-enabled:
+        type: boolean
+        description: Run integration tests with tmate debugging enabled
+        required: false
+        default: false
+      base:
+        description: Ubuntu base to run linting and unit tests on
+        required: false
+        default: "22.04"
+        type: string
+      k8s-channel:
+        description: "The channel of Charmed Kubernetes or MicroK8s to install"
+        type: string
+        required: false
+        default: "1.35-strict/stable"
+    secrets:
+      CHARMCRAFT_CREDENTIALS:
+        required: false
+      GH_USERNAME:
+        required: false
+      GH_PAT:
+        required: false
+
+jobs:
+  check:
+    runs-on: ubuntu-${{ inputs.base }}
+    outputs:
+      platforms: ${{ steps.info.outputs.platforms }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+      - name: Get charm info
+        id: info
+        run: |
+          charm_base=$(cat charmcraft.yaml | yq '.base // ""')
+          platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
+          platforms=$(echo "$platforms_json" | jq -c --arg charm_base "$charm_base" '
+            map(. as $platform |
+              if ($platform | contains(":")) then
+                ($platform | split(":")) as $parts |
+                {
+                  base: ($parts[0] | sub("^ubuntu@"; "")),
+                  architecture: $parts[-1]
+                }
+              elif $charm_base != "" then
+                {
+                  base: ($charm_base | sub("^ubuntu@"; "")),
+                  architecture: $platform
+                }
+              else
+                error("A top-level base is required for shorthand platform names")
+              end
+            )
+          ')
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
+
+  linting:
+    name: Linting
+    uses: ./.github/workflows/_charm-linting.yaml
+    with:
+      base: ${{ inputs.base }}
+
+  unit-test:
+    name: Unit Tests
+    needs: linting
+    uses: ./.github/workflows/_charm-tests-unit.yaml
+    with:
+      tox-unit-test-targets: ${{ inputs.tox-unit-test-targets }}
+      base: ${{ inputs.base }}
+
+  integration-test:
+    name: Integration Tests (${{ matrix.platform.base }} | ${{ matrix.platform.architecture }})
+    needs:
+      - check
+      - linting
+      - unit-test
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: ${{ fromJson(needs.check.outputs.platforms) }}
+    uses: ./.github/workflows/_charm-tests-integration.yaml
+    secrets:
+      GH_USERNAME: ${{ secrets.GH_USERNAME }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+    with:
+      container-name: ${{ inputs.container-name }}
+      charm-config-path: ${{ inputs.charm-config-path }}
+      use-charmcraftcache: ${{ inputs.use-charmcraftcache }}
+      node-size: ${{ inputs.node-size }}
+      tox-integration-test-targets: ${{ inputs.tox-integration-test-targets }}
+      pytest-model-option: ${{ inputs.pytest-model-option }}
+      juju-model-name: ${{ inputs.juju-model-name }}
+      debug-enabled: ${{ inputs.debug-enabled }}
+      architecture: ${{ matrix.platform.architecture }}
+      base: ${{ matrix.platform.base }}
+      k8s-channel: ${{ inputs.k8s-channel }}
