@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.15.0](https://github.com/canonical/identity-team/compare/v1.14.3...v1.15.0) (2026-07-31)
+
+
+### Features
+
+* add charm-release-pr workflow ([4452d17](https://github.com/canonical/identity-team/commit/4452d1707af2dff9046222f9e7eaf4ea83758830))
+* support multiple bases ([769e852](https://github.com/canonical/identity-team/commit/769e85299a743827684d350c7454e7c590bcf72d))
+* support multiple bases ([#139](https://github.com/canonical/identity-team/issues/139)) ([c6ac91a](https://github.com/canonical/identity-team/commit/c6ac91a721ece83888346545b939d0798c950921))
+
 ## [1.14.3](https://github.com/canonical/identity-team/compare/v1.14.2...v1.14.3) (2026-07-17)
 
 
