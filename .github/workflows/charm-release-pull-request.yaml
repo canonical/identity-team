@@ -1,4 +1,5 @@
-name: Pull Request Workflow
+# Run pre-release integration tests for all supported architectures and bases. Lint and unit tests are run once, on the base defined in the workflow input.
+name: Release Pull Request Workflow
 
 on:
   workflow_call:
@@ -46,13 +47,8 @@ on:
         description: Run integration tests with tmate debugging enabled
         required: false
         default: false
-      multi-arch:
-        description: Run integration tests on all architectures defined in the platforms of charmcraft.yaml
-        required: false
-        default: false
-        type: boolean
       base:
-        description: Ubuntu base to run/build on (e.g. 22.04, 24.04, 26.04)
+        description: Ubuntu base to run linting and unit tests on
         required: false
         default: "22.04"
         type: string
@@ -60,7 +56,7 @@ on:
         description: "The channel of Charmed Kubernetes or MicroK8s to install"
         type: string
         required: false
-        default: "1.32-strict/stable"
+        default: "1.35-strict/stable"
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -73,34 +69,36 @@ jobs:
   check:
     runs-on: ubuntu-${{ inputs.base }}
     outputs:
-      architectures: ${{ inputs.multi-arch && steps.info.outputs.architectures || '["amd64"]' }}
+      platforms: ${{ steps.info.outputs.platforms }}
     steps:
       - name: Checkout
-        if: ${{ inputs.multi-arch }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           fetch-depth: 0
       - name: Get charm info
-        if: ${{ inputs.multi-arch }}
         id: info
         run: |
           charm_base=$(cat charmcraft.yaml | yq '.base // ""')
           platforms_json=$(cat charmcraft.yaml | yq '.platforms | keys | tojson')
-          architectures=$(echo "$platforms_json" | jq -c --arg base "ubuntu@${{ inputs.base }}" --arg charm_base "$charm_base" '
-            map(
-              select(
-                if contains(":") then
-                  (split(":") | first) == $base
-                else
-                  $charm_base == $base
-                end
-              ) |
-              split(":") |
-              last
-            ) |
-            unique
+          platforms=$(echo "$platforms_json" | jq -c --arg charm_base "$charm_base" '
+            map(. as $platform |
+              if ($platform | contains(":")) then
+                ($platform | split(":")) as $parts |
+                {
+                  base: ($parts[0] | sub("^ubuntu@"; "")),
+                  architecture: $parts[-1]
+                }
+              elif $charm_base != "" then
+                {
+                  base: ($charm_base | sub("^ubuntu@"; "")),
+                  architecture: $platform
+                }
+              else
+                error("A top-level base is required for shorthand platform names")
+              end
+            )
           ')
-          echo "architectures=$architectures" >> $GITHUB_OUTPUT
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
 
   linting:
     name: Linting
@@ -110,22 +108,22 @@ jobs:
 
   unit-test:
     name: Unit Tests
+    needs: linting
     uses: ./.github/workflows/_charm-tests-unit.yaml
     with:
       tox-unit-test-targets: ${{ inputs.tox-unit-test-targets }}
       base: ${{ inputs.base }}
-    needs:
-      - linting
 
   integration-test:
-    name: Integration Tests (${{ inputs.base }} | ${{ matrix.architecture }})
+    name: Integration Tests (${{ matrix.platform.base }} | ${{ matrix.platform.architecture }})
     needs:
+      - check
       - linting
       - unit-test
-      - check
     strategy:
+      fail-fast: false
       matrix:
-        architecture: ${{ fromJson(needs.check.outputs.architectures) }}
+        platform: ${{ fromJson(needs.check.outputs.platforms) }}
     uses: ./.github/workflows/_charm-tests-integration.yaml
     secrets:
       GH_USERNAME: ${{ secrets.GH_USERNAME }}
@@ -139,6 +137,6 @@ jobs:
       pytest-model-option: ${{ inputs.pytest-model-option }}
       juju-model-name: ${{ inputs.juju-model-name }}
       debug-enabled: ${{ inputs.debug-enabled }}
-      architecture: ${{ matrix.architecture }}
-      base: ${{ inputs.base }}
+      architecture: ${{ matrix.platform.architecture }}
+      base: ${{ matrix.platform.base }}
       k8s-channel: ${{ inputs.k8s-channel }}
