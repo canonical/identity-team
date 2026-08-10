@@ -16,9 +16,14 @@ on:
         description: "Comma separated list of ignored restrictions (e.g. 'unmaintained')"
       architecture:
         type: string
-        default: "amd64"
+        default: ""
         required: false
-        description: "Target architecture (e.g. amd64 or arm64)"
+        description: "[deprecated, use 'architectures' with an 's'] Target architecture"
+      architectures:
+        type: string
+        default: '["amd64"]'
+        required: false
+        description: 'JSON array string of target architectures (e.g. ["amd64", "arm64"])'
       runner:
         type: string
         default: ""
@@ -31,8 +36,11 @@ on:
 
 jobs:
   build:
-    name: Build (${{ inputs.architecture }})
-    runs-on: ${{ inputs.runner != '' && inputs.runner || (inputs.architecture == 'arm64' && 'self-hosted-linux-arm64-noble-medium' || 'ubuntu-24.04') }}
+    name: Build (${{ matrix.architecture }})
+    strategy:
+      matrix:
+        architecture: ${{ inputs.architecture != '' && fromJSON(format('["{0}"]', inputs.architecture)) || fromJSON(inputs.architectures) }}
+    runs-on: ${{ inputs.runner != '' && inputs.runner || (matrix.architecture == 'arm64' && 'self-hosted-linux-arm64-noble-medium' || 'ubuntu-24.04') }}
     outputs:
       rock: ${{ steps.rockcraft.outputs.rock }}
     steps:
@@ -51,7 +59,7 @@ jobs:
         if: inputs.structure-tests-enabled == true
         run: |
           mkdir -p bin/
-          curl -Lo bin/container-structure-test "https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-${{ inputs.architecture }}"
+          curl -Lo bin/container-structure-test "https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-${{ matrix.architecture }}"
           chmod +x bin/container-structure-test
           echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
 
@@ -78,3 +86,18 @@ jobs:
         with:
           name: ${{ steps.rockcraft.outputs.rock }}
           path: ${{ steps.rockcraft.outputs.rock }}
+
+  # Consolidated status check for all build jobs that fails if any architecture build job fails.
+  # This provides a static check context name ("ci / build / Build") for branch protection rules.
+  status-check:
+    name: Build
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check build status
+        run: |
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "Build failed with status: ${{ needs.build.result }}"
+            exit 1
+          fi
