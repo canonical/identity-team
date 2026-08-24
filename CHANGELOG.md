@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.16.0](https://github.com/canonical/identity-team/compare/v1.15.0...v1.16.0) (2026-08-24)
+
+
+### Features
+
+* support ignore-vulnerabilities in rock oci publish workflow ([4a6a193](https://github.com/canonical/identity-team/commit/4a6a193df237713ccf67bbcb10df461a263f9125))
+* support ignore-vulnerabilities in rock oci publish workflow ([#142](https://github.com/canonical/identity-team/issues/142)) ([8ac6683](https://github.com/canonical/identity-team/commit/8ac6683699b94bf636004c4bda5232191896ec56))
+
 ## [1.15.0](https://github.com/canonical/identity-team/compare/v1.14.3...v1.15.0) (2026-07-31)
 
 
