@@ -31,6 +31,11 @@ on:
         type: string
         required: false
         default: "22.04"
+      ignore-vulnerabilities:
+        type: string
+        required: false
+        default: ""
+        description: "Comma-separated list of vulnerabilities to ignore"
 
 jobs:
   oci-factory:
@@ -41,7 +46,7 @@ jobs:
       - name: Golang setup
         uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5
         with:
-          go-version: ">=1.22.0"
+          go-version: ">=1.25.0"
       # install oci-factory via golang and set path in environment
       - name: Install oci-factory
         run: |
@@ -56,13 +61,18 @@ jobs:
           echo EOL_CANDIDATE=$(date -d "$(date +'%Y-%m-%d') +${{ inputs.eol-edge-release }}" "+%Y-%m-%d") >> $GITHUB_ENV
           echo IMAGE_VERSION_STABLE=$($YQ '.version | split(".").0' rockcraft.yaml) >> $GITHUB_ENV
           echo IMAGE_VERSION_CANDIDATE=$($YQ '.version | split(".").[0:2] | join(".")' rockcraft.yaml) >> $GITHUB_ENV
+          IGNORE_VULNS="${{ inputs.ignore-vulnerabilities }}"
+          IGNORE_VULNS="$(echo "$IGNORE_VULNS" | tr -d ' ')"
+          if [ -n "$IGNORE_VULNS" ]; then
+            echo "IGNORED_VULNERABILITIES=--ignored-vulnerabilities=$IGNORE_VULNS" >> $GITHUB_ENV
+          fi
       - name: Release to stable
-        run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_STABLE-${{ inputs.ubuntu-base-version }},risks=stable,eol=$EOL_STABLE
+        run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_STABLE-${{ inputs.ubuntu-base-version }},risks=stable,eol=$EOL_STABLE $IGNORED_VULNERABILITIES
         if: inputs.stable-release == true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
       - name: Release to edge and candidate
-        run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_CANDIDATE-${{ inputs.ubuntu-base-version }},risks=candidate,edge,eol=$EOL_CANDIDATE
+        run: $OCI_FACTORY upload -y --release track=$IMAGE_VERSION_CANDIDATE-${{ inputs.ubuntu-base-version }},risks=candidate,edge,eol=$EOL_CANDIDATE $IGNORED_VULNERABILITIES
         if: inputs.edge-release == true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
