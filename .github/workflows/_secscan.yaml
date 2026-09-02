@@ -60,7 +60,7 @@ jobs:
             --format ${{ inputs.artifacts-format }} \
             --token ~/snap/canonical-secscan-client/common/secscan.token \
             ${{ matrix.artifact }} --wait-and-print --raw 2>&1 | tee secscan.result
-            
+
             echo "secscan-result=secscan.result" >> $GITHUB_OUTPUT
 
       - name: Upload Scan Results

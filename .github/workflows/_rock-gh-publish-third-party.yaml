@@ -74,13 +74,13 @@ jobs:
                 arch="${no_ext##*_}"
                 target_tag="${version}-${arch}"
                 arch_tags+=("ghcr.io/${{ github.repository_owner }}/$image_name:${target_tag}")
-                
+
                 sudo rockcraft.skopeo --insecure-policy copy \
                   --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
                   oci-archive:"$(realpath "$rock")" \
                   docker://ghcr.io/${{ github.repository_owner }}/$image_name:"${target_tag}"
               done
-              
+
               docker manifest create --amend ghcr.io/${{ github.repository_owner }}/$image_name:"${version}" "${arch_tags[@]}"
               docker manifest push ghcr.io/${{ github.repository_owner }}/$image_name:"${version}"
             done
