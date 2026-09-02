@@ -4,7 +4,7 @@ on:
   workflow_call:
     secrets:
       PAT_TOKEN:
-        required: true   
+        required: true
 
 permissions:
     contents: write
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4
         id: release
-        with:   
+        with:
           token: ${{ secrets.PAT_TOKEN }}
           # optional. customize path to release-please-config.json
           config-file: release-please-config.json
