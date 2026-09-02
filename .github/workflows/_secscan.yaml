@@ -38,6 +38,7 @@ jobs:
       matrix:
         artifact: ${{ fromJson(needs.inputs-vetting.outputs.paths) }}
     runs-on: [self-hosted-linux-amd64-noble-private-endpoint-medium]
+    timeout-minutes: 15
     steps:
       - name: Install secscan cli
         run: |
