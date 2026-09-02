@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/canonical/identity-team/compare/v1.16.0...v1.16.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* add timeout to secscan sub workflow ([307b463](https://github.com/canonical/identity-team/commit/307b463d6952e1610e4d08b3a994bd7ea2a6722c))
+
 ## [1.16.0](https://github.com/canonical/identity-team/compare/v1.15.0...v1.16.0) (2026-08-24)
 
 
