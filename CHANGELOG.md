@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.2](https://github.com/canonical/identity-team/compare/v1.16.1...v1.16.2) (2026-09-02)
+
+
+### Bug Fixes
+
+* unblock charm publish from secscan ([690bbd0](https://github.com/canonical/identity-team/commit/690bbd09578dd436aa732d685d2c98f61709ead6))
+
 ## [1.16.1](https://github.com/canonical/identity-team/compare/v1.16.0...v1.16.1) (2026-09-02)
 
 
