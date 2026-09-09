@@ -16,10 +16,8 @@ charms=(
     "ubuntu-sso-k8s-operator"
     "tenant-service-operator"
     "authentik-server-operator"
-    "authentik-server-rock"
     "authentik-worker-operator"
     "authentik-ldap-outpost-operator"
-    "authentik-ldap-outpost-rock"
     "identity-saml-provider-operator"
 )
 
@@ -29,6 +27,8 @@ rocks=(
     "kratos-rock"
     "oauth2-proxy-rock"
     "openfga-rock"
+    "authentik-server-rock"
+    "authentik-ldap-outpost-rock"
 )
 
 apps=(
