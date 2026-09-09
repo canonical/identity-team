@@ -5,3 +5,6 @@
 .vscode/*
 .history/
 *.vsix
+
+sboms/
+*-sboms-upload/
