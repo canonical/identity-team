@@ -87,7 +87,7 @@ jobs:
       - node-size-validation
     steps:
       - name: Setup tmate session
-        uses: canonical/action-tmate@main
+        uses: canonical/action-tmate@5f11b26528699b78dadfb61273f4c859ac7145cf # main
         if: ${{ fromJSON(inputs.debug-enabled || 'false') }}
         timeout-minutes: 600
         with:
@@ -95,10 +95,10 @@ jobs:
           sudo: true
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup operator environment (microk8s)
-        uses: charmed-kubernetes/actions-operator@main
+        uses: charmed-kubernetes/actions-operator@d8217ad61c15f746727a9d41563c13e9b9fe56e3 # main
         with:
           juju-channel: 3.6/stable
           provider: microk8s
@@ -106,7 +106,7 @@ jobs:
           microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: ${{ inputs.base == '26.04' && '3.14' || inputs.base == '24.04' && '3.12' || '3.10' }}
 
@@ -155,7 +155,7 @@ jobs:
 
       - name: Dump logs
         if: failure()
-        uses: canonical/charming-actions/dump-logs@main
+        uses: canonical/charming-actions/dump-logs@9180b22741d2349858e35e1dcc2fe4e11c3ebf2d # main
 
       - name: Get juju logs for the charm
         if: ${{ failure() }}
