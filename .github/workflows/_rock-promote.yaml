@@ -1,0 +1,65 @@
+name: image promotion
+run-name: Promote candidate image ${{ inputs.candidate-image }} to stable
+
+on:
+  workflow_call:
+    inputs:
+      candidate-image:
+        type: string
+        required: true
+        description: "Candidate container image URL (e.g. ghcr.io/org/repo:v1.0.0-candidate)"
+      release-tag:
+        type: string
+        required: true
+        description: "Release tag name (e.g. v1.0.0)"
+      promote-stable:
+        type: boolean
+        required: false
+        default: true
+        description: "Whether to also tag image as stable"
+      mark-latest:
+        type: boolean
+        required: false
+        default: true
+        description: "Whether to mark the GitHub release as latest"
+
+jobs:
+  promote:
+    permissions:
+      packages: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Rockcraft for Skopeo
+        run: sudo snap install --classic --channel latest/stable rockcraft
+
+      - name: Promote image tags via Skopeo
+        run: |
+          source_image="docker://${{ inputs.candidate-image }}"
+          target_tags=("${{ inputs.release-tag }}")
+          if [ "${{ inputs.promote-stable }}" = "true" ]; then
+            target_tags+=("stable")
+          fi
+
+          for tag in "${target_tags[@]}"; do
+            echo "Promoting to ghcr.io/${{ github.repository }}:${tag}..."
+            sudo rockcraft.skopeo --insecure-policy copy \
+              --src-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+              --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
+              "$source_image" \
+              "docker://ghcr.io/${{ github.repository }}:${tag}"
+          done
+
+      - name: Graduate GitHub Release from pre-release to stable
+        run: |
+          if gh release view "${{ inputs.release-tag }}" >/dev/null 2>&1; then
+            cmd=("gh" "release" "edit" "${{ inputs.release-tag }}" "--prerelease=false")
+            if [ "${{ inputs.mark-latest }}" = "true" ]; then
+              cmd+=("--latest")
+            fi
+            "${cmd[@]}"
+          else
+            echo "Notice: GitHub release ${{ inputs.release-tag }} not found; skipping release graduation."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

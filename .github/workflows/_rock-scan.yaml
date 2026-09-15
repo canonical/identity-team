@@ -8,6 +8,26 @@ on:
         type: string
         required: true
         description: "image to scan"
+      exit-code:
+        type: string
+        required: false
+        default: "0"
+        description: "Exit code when vulnerabilities are found ('1' to fail on CVEs, '0' to report only)"
+      severity:
+        type: string
+        required: false
+        default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
+        description: "Severities of CVEs to evaluate (note: unselected severities will be omitted from the uploaded SARIF report)"
+      ignore-unfixed:
+        type: boolean
+        required: false
+        default: false
+        description: "Ignore unpatched CVEs without available upstream fixes"
+      trivyignores:
+        type: string
+        required: false
+        default: ""
+        description: "Path to .trivyignore file"
 jobs:
   scan:
     permissions:
@@ -17,14 +37,23 @@ jobs:
       actions: read
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        if: ${{ inputs.trivyignores != '' }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ inputs.image }}
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: ${{ inputs.severity }}
+          exit-code: ${{ inputs.exit-code }}
+          ignore-unfixed: ${{ inputs.ignore-unfixed }}
+          trivyignores: ${{ inputs.trivyignores }}
 
       - name: Upload scan results to GitHub
+        if: always()
         uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3
         with:
           sarif_file: 'trivy-results.sarif'

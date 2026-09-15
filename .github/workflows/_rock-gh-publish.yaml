@@ -9,6 +9,11 @@ on:
         required: false
         default: ""
         description: "Specific rock artifact to download. If empty, all rocks in the run will be downloaded and published as a multi-arch image."
+      candidate:
+        type: boolean
+        required: false
+        default: false
+        description: "When true on a tag push, publish as <ref_name>-candidate instead of stable/<ref_name>."
     outputs:
       image:
         description: "container image"
@@ -41,11 +46,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload ROCK to ghcr.io (latest or stable)
+      - name: Upload ROCK to ghcr.io
         run: |
           if [ "${{ github.ref_type }}" = "branch" ]; then
             versions=(latest "${{ github.sha }}")
             image_tag="${{ github.sha }}"
+          elif [ "${{ inputs.candidate }}" = "true" ]; then
+            versions=("${{ github.ref_name }}-candidate" "${{ github.sha }}")
+            image_tag="${{ github.ref_name }}-candidate"
           else
             versions=(stable "${{ github.ref_name }}")
             image_tag="${{ github.ref_name }}"
