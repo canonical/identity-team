@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.0](https://github.com/canonical/identity-team/compare/v1.16.2...v1.17.0) (2026-09-15)
+
+
+### Features
+
+* **rock:** support candidate publishing, scan gating, and promotion ([ba598b5](https://github.com/canonical/identity-team/commit/ba598b53b5e5f485eb7c600a83b5e38d26c6da41))
+* **rock:** support candidate publishing, scan gating, and promotion workflows ([#150](https://github.com/canonical/identity-team/issues/150)) ([69e3509](https://github.com/canonical/identity-team/commit/69e350907b1c0284cbeb4d540255e36ac9db8fdf))
+
 ## [1.16.2](https://github.com/canonical/identity-team/compare/v1.16.1...v1.16.2) (2026-09-02)
 
 
