@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.1](https://github.com/canonical/identity-team/compare/v1.17.0...v1.17.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* **rock:** preserve multi-arch manifest list during skopeo promotion ([da82ed0](https://github.com/canonical/identity-team/commit/da82ed08b9f720fbd252c5b93f1f8035b4327ce4))
+* **rock:** preserve multi-arch manifest list during skopeo promotion ([#156](https://github.com/canonical/identity-team/issues/156)) ([0935cc3](https://github.com/canonical/identity-team/commit/0935cc33059dd3c3102b6caf92851a2238b4a606))
+
 ## [1.17.0](https://github.com/canonical/identity-team/compare/v1.16.2...v1.17.0) (2026-09-15)
 
 
