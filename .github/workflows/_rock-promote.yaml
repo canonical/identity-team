@@ -43,7 +43,7 @@ jobs:
 
           for tag in "${target_tags[@]}"; do
             echo "Promoting to ghcr.io/${{ github.repository }}:${tag}..."
-            sudo rockcraft.skopeo --insecure-policy copy \
+            sudo rockcraft.skopeo --insecure-policy copy --all \
               --src-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
               --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
               "$source_image" \
