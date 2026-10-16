@@ -28,6 +28,11 @@ on:
         required: false
         default: ""
         description: "Path to .trivyignore file"
+      skip-files:
+        type: string
+        required: false
+        default: "/bin/pebble,/usr/bin/pebble"
+        description: "Comma-separated list of files to skip during scanning"
 jobs:
   scan:
     permissions:
@@ -51,6 +56,7 @@ jobs:
           exit-code: ${{ inputs.exit-code }}
           ignore-unfixed: ${{ inputs.ignore-unfixed }}
           trivyignores: ${{ inputs.trivyignores }}
+          skip-files: ${{ inputs.skip-files }}
 
       - name: Upload scan results to GitHub
         if: always()
