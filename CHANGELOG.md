@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.2](https://github.com/canonical/identity-team/compare/v1.17.1...v1.17.2) (2026-10-19)
+
+
+### Bug Fixes
+
+* **rock:** skip pebble binaries during Trivy image scan ([45a669e](https://github.com/canonical/identity-team/commit/45a669ec0175bbe75ad527d284479f9d6faac4d1))
+* **rock:** skip pebble binaries during Trivy image scan ([#158](https://github.com/canonical/identity-team/issues/158)) ([e5cc59a](https://github.com/canonical/identity-team/commit/e5cc59a8b8a773d42de897740c1c9ed5fd1d36e8))
+
 ## [1.17.1](https://github.com/canonical/identity-team/compare/v1.17.0...v1.17.1) (2026-10-15)
 
 
