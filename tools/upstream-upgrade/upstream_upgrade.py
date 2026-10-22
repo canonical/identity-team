@@ -39,16 +39,16 @@ try:
 except ImportError:  # pragma: no cover
     yaml = None  # type: ignore[assignment]
 
-# Default settings (used when no config file or rockcraft.yaml overrides them).
-WORKLOAD = "authentik"
-UPSTREAM_REPO = "goauthentik/authentik"
-TAG_PREFIX = "version/"
+# Default settings (populated from rockcraft.yaml and .github/upstream-upgrade.yaml).
+WORKLOAD = ""
+UPSTREAM_REPO = ""
+TAG_PREFIX = "v"
 SOURCE_SUBDIR = ""
-RELEASE_NOTES_PATH: str | None = "website/docs/releases/{year}/v{year}.{minor}.mdx"
-ROCK_IMAGE = "ghcr.io/canonical/authentik-server"
+RELEASE_NOTES_PATH: str | None = None
+ROCK_IMAGE = ""
 DEFAULT_CHARM_BRANCH = "main"
 DEFAULT_CONFIG_PATH = Path(".github/upstream-upgrade.yaml")
-ENFORCE_SEQUENTIAL_SERIES = True
+ENFORCE_SEQUENTIAL_SERIES = False
 
 # The workflow an engineer runs to open the charm issues, as its name: reads.
 CHARM_ISSUES_WORKFLOW = "Upstream charm upgrade issues"
@@ -99,13 +99,6 @@ DEFAULT_IN_PLACE_UPGRADE = (
     "and confirm existing data and relations survive."
 )
 
-AUTHENTIK_IN_PLACE_UPGRADE = (
-    "deploy the current `main` charm with `{{ FROM }}` against PostgreSQL (and "
-    "`authentik-worker`), create a test user/flow or OAuth client, then "
-    "`juju refresh {{ APP }} --resource {{ RESOURCE }}={{ IMAGE }}` "
-    "and confirm migrations succeed and existing data survives."
-)
-
 
 @dataclass(frozen=True)
 class Charm:
@@ -122,60 +115,7 @@ class Charm:
     in_place_upgrade: str = DEFAULT_IN_PLACE_UPGRADE
 
 
-CHARMS: tuple[Charm, ...] = (
-    Charm(
-        key="server",
-        repo="canonical/authentik-server-operator",
-        app="authentik-server",
-        container="authentik",
-        service="authentik-server",
-        resource="oci-image",
-        description=(
-            "Kubernetes charm running `/lifecycle/ak server` (HTTP 9000, HTTPS 9443, "
-            "metrics 9300). It configures authentik only through AUTHENTIK_* environment "
-            "variables in its Pebble layer, checks health on /-/health/live/ and "
-            "/-/health/ready/, requires PostgreSQL (pg-database) and ingress "
-            "(traefik-route), and optionally SMTP, logging and tracing. It calls the "
-            "authentik REST API with a bootstrap token to manage OAuth2 providers for "
-            "applications related over `oauth`, and shares the secret key and the "
-            "database settings with the worker charm over `authentik-cluster`."
-        ),
-        files=(
-            "charmcraft.yaml",
-            "src/constants.py",
-            "src/env_vars.py",
-            "src/configs.py",
-            "src/integrations.py",
-            "src/services.py",
-            "src/cli.py",
-            "src/authentik_api.py",
-        ),
-        in_place_upgrade=AUTHENTIK_IN_PLACE_UPGRADE,
-    ),
-    Charm(
-        key="worker",
-        repo="canonical/authentik-worker-operator",
-        app="authentik-worker",
-        container="authentik",
-        service="authentik-worker",
-        resource="oci-image",
-        description=(
-            "Kubernetes charm running `/lifecycle/ak worker` (metrics 9300) from the same "
-            "image. It receives AUTHENTIK_SECRET_KEY and the PostgreSQL settings from the "
-            "server charm over `authentik-cluster` and sets AUTHENTIK_* environment "
-            "variables in its Pebble layer."
-        ),
-        files=(
-            "charmcraft.yaml",
-            "src/constants.py",
-            "src/env_vars.py",
-            "src/configs.py",
-            "src/integrations.py",
-            "src/services.py",
-        ),
-        in_place_upgrade=AUTHENTIK_IN_PLACE_UPGRADE,
-    ),
-)
+CHARMS: tuple[Charm, ...] = ()
 
 
 # Configuration & Auto-detection
@@ -331,11 +271,15 @@ def configure_from_files(
         TAG_PREFIX = rock_meta.tag_prefix
         SOURCE_SUBDIR = rock_meta.source_subdir
         ROCK_IMAGE = rock_meta.rock_image
-        if UPSTREAM_REPO != "goauthentik/authentik":
-            RELEASE_NOTES_PATH = None
-            DIFFED_FILES = ("Dockerfile",)
-            TRUSTED_LINK_HOSTS = ()
-            ENFORCE_SEQUENTIAL_SERIES = False
+        RELEASE_NOTES_PATH = None
+        DIFFED_FILES = ("Dockerfile",)
+        TRUSTED_LINK_HOSTS = ()
+        ENFORCE_SEQUENTIAL_SERIES = False
+    elif rock_meta:
+        if not WORKLOAD and rock_meta.workload:
+            WORKLOAD = rock_meta.workload
+        if not ROCK_IMAGE and rock_meta.rock_image:
+            ROCK_IMAGE = rock_meta.rock_image
 
     if "workload" in cfg:
         WORKLOAD = str(cfg["workload"])
@@ -506,7 +450,7 @@ def notes_path(series: Series) -> str:
     if not RELEASE_NOTES_PATH:
         return ""
     return RELEASE_NOTES_PATH.format(
-        year=series[0], major=series[0], minor=series[1]
+        year=series[0], major=series[0], minor=series[1], series=series_name(series)
     )
 
 
@@ -699,7 +643,7 @@ PROBES = (
     Probe("Web package manager", "web/package.json", _web_package_manager),
 )
 # Upstream's own image recipe and entrypoint, which rockcraft.yaml mirrors.
-DIFFED_FILES: tuple[str, ...] = ("lifecycle/container/Dockerfile", "lifecycle/ak")
+DIFFED_FILES: tuple[str, ...] = ("Dockerfile",)
 
 Fetch = Callable[[Version, str], "str | None"]
 
@@ -1073,7 +1017,7 @@ def compare_build_inputs(
 
 ZERO_WIDTH_SPACE = "​"
 URL_RE = re.compile(r"https?://[^\s<>()\[\]\"'`]+")
-TRUSTED_LINK_HOSTS: tuple[str, ...] = ("goauthentik.io", "docs.goauthentik.io")
+TRUSTED_LINK_HOSTS: tuple[str, ...] = ()
 
 
 def clip(text: str, limit: int) -> str:
@@ -1732,6 +1676,12 @@ def main(argv: list[str] | None = None) -> int:
     global CHARMS
     args = parse_args(argv)
     configure_from_files(args.config, args.rockcraft)
+    if not UPSTREAM_REPO:
+        print(
+            "error: upstream_repo could not be inferred from rockcraft.yaml and was not set in config",
+            file=sys.stderr,
+        )
+        return 1
 
     def fetch_charm(charm: Charm, path: str) -> str | None:
         return charm_file(charm, path, branch=args.target_branch)

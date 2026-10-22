@@ -14,6 +14,59 @@ from upstream_upgrade import LLMError, Provider, Version
 
 V = Version.parse
 
+
+def configure_test_defaults():
+    """Populate module-level settings with test fixture values."""
+    uu.WORKLOAD = "authentik"
+    uu.UPSTREAM_REPO = "goauthentik/authentik"
+    uu.TAG_PREFIX = "version/"
+    uu.SOURCE_SUBDIR = ""
+    uu.RELEASE_NOTES_PATH = "website/docs/releases/{year}/v{year}.{minor}.mdx"
+    uu.ROCK_IMAGE = "ghcr.io/canonical/authentik-server"
+    uu.ENFORCE_SEQUENTIAL_SERIES = True
+    uu.DIFFED_FILES = ("lifecycle/container/Dockerfile", "lifecycle/ak")
+    uu.TRUSTED_LINK_HOSTS = ("docs.goauthentik.io",)
+    uu.CHARMS = (
+        uu.Charm(
+            key="server",
+            repo="canonical/authentik-server-operator",
+            app="authentik-server",
+            container="authentik-server",
+            service="authentik-server",
+            description="Serves the web UI, API, OIDC/SAML flows and embedded outpost behind ingress.",
+            files=(
+                "charmcraft.yaml",
+                "src/charm.py",
+                "src/cli.py",
+                "src/constants.py",
+                "src/env_vars.py",
+                "src/integrations.py",
+                "src/pebble.py",
+            ),
+        ),
+        uu.Charm(
+            key="worker",
+            repo="canonical/authentik-worker-operator",
+            app="authentik-worker",
+            container="authentik",
+            service="authentik-server",
+            description="Runs background tasks, blueprints and scheduled jobs from PostgreSQL.",
+            files=(
+                "charmcraft.yaml",
+                "src/charm.py",
+                "src/cli.py",
+                "src/constants.py",
+                "src/env_vars.py",
+                "src/integrations.py",
+                "src/pebble.py",
+            ),
+        ),
+    )
+    uu.ANALYSIS_SCHEMA = uu.build_analysis_schema()
+
+
+configure_test_defaults()
+
 # The shape of upstream's history: series are not consecutive numbers.
 RELEASED = [
     V(text)
@@ -800,6 +853,8 @@ class RenderTest(unittest.TestCase):
 
 class MainTest(unittest.TestCase):
     def setUp(self):
+        configure_test_defaults()
+        self.addCleanup(configure_test_defaults)
         uu.upstream_file.cache_clear()
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
