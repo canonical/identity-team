@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.0](https://github.com/canonical/identity-team/compare/v1.17.2...v1.18.0) (2026-10-23)
+
+
+### Features
+
+* add reusable rock upstream upgrade workflows and tooling ([b45a7b1](https://github.com/canonical/identity-team/commit/b45a7b1a268f0bf328dd34a197cb4a5872d282da))
+* add reusable rock upstream upgrade workflows and tooling ([#160](https://github.com/canonical/identity-team/issues/160)) ([d70b98e](https://github.com/canonical/identity-team/commit/d70b98e4b4e242d0af6a20b8898eff3b4e0d9e0b))
+
 ## [1.17.2](https://github.com/canonical/identity-team/compare/v1.17.1...v1.17.2) (2026-10-19)
 
 
