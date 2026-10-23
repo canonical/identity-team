@@ -1,0 +1,126 @@
+name: Rock upstream charm upgrade issues
+
+on:
+  workflow_call:
+    inputs:
+      target-branch:
+        description: "Target branch in the charm repositories"
+        type: string
+        required: false
+        default: "main"
+      to-version:
+        description: "Upstream version to move to (default: the one in rockcraft.yaml)"
+        type: string
+        required: false
+        default: ""
+      image:
+        description: "Published image (default: the rock's image for that version)"
+        type: string
+        required: false
+        default: ""
+      dry-run:
+        description: "Generate the issues without opening them"
+        type: boolean
+        required: false
+        default: false
+      config-path:
+        description: "Path to the per-repository upstream upgrade config file"
+        type: string
+        required: false
+        default: ".github/upstream-upgrade.yaml"
+      rockcraft-path:
+        description: "Path to rockcraft.yaml"
+        type: string
+        required: false
+        default: "rockcraft.yaml"
+      identity-team-ref:
+        description: "Branch or tag of canonical/identity-team to load the tooling from"
+        type: string
+        required: false
+        default: "main"
+    secrets:
+      PAT_TOKEN:
+        required: true
+      GEMINI_API_KEY:
+        required: false
+      OPENROUTER_CI_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  open-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout rock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Fetch upstream upgrade tooling
+        env:
+          IDENTITY_TEAM_REF: ${{ inputs.identity-team-ref }}
+        run: |
+          git clone --quiet --depth=1 --branch "$IDENTITY_TEAM_REF" \
+            https://github.com/canonical/identity-team.git "$RUNNER_TEMP/identity-team"
+
+      - name: Analyse the upgrade
+        id: analysis
+        env:
+          TARGET_BRANCH: ${{ inputs.target-branch || 'main' }}
+          TO_VERSION: ${{ inputs.to-version }}
+          IMAGE: ${{ inputs.image }}
+          CONFIG_PATH: ${{ inputs.config-path }}
+          ROCKCRAFT_PATH: ${{ inputs.rockcraft-path }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_CI_KEY: ${{ secrets.OPENROUTER_CI_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          # The issues are the LLM's output, so fail rather than file empty ones.
+          args=(
+            --require-llm
+            --config "$CONFIG_PATH"
+            --rockcraft "$ROCKCRAFT_PATH"
+            --target-branch "$TARGET_BRANCH"
+            --out-dir "$RUNNER_TEMP/upgrade"
+          )
+          if [ -n "$TO_VERSION" ]; then
+            args+=(--to "$TO_VERSION")
+          fi
+          if [ -n "$IMAGE" ]; then
+            args+=(--image "$IMAGE")
+          fi
+          python3 "$RUNNER_TEMP/identity-team/tools/upstream-upgrade/upstream_upgrade.py" "${args[@]}"
+
+      - name: Open the charm issues
+        if: ${{ steps.analysis.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          while IFS=$'\t' read -r repo title body_file; do
+            {
+              echo "# ${repo}: ${title}"
+              echo
+              cat "$body_file"
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run: not opening \"${title}\" on ${repo}."
+              continue
+            fi
+
+            # One issue per upstream version, whatever its state.
+            existing=$(gh issue list --repo "$repo" --state all \
+              --search "in:title \"${title}\"" --json number,title |
+              jq -r --arg title "$title" 'map(select(.title == $title)) | .[0].number // empty')
+            if [ -n "$existing" ]; then
+              echo "${repo}#${existing} already tracks this upgrade."
+            else
+              # The enhancement label is what syncs the issue to Jira.
+              gh issue create --repo "$repo" --title "$title" --label enhancement \
+                --body-file "$body_file"
+            fi
+          done < <(jq -r '.[] | [.repo, .title, .body_file] | @tsv' \
+            "$RUNNER_TEMP/upgrade/charm_issues.json")

@@ -1,0 +1,119 @@
+name: Rock upstream upgrade analysis
+
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        description: "Path to the per-repository upstream upgrade config file"
+        type: string
+        required: false
+        default: ".github/upstream-upgrade.yaml"
+      rockcraft-path:
+        description: "Path to rockcraft.yaml"
+        type: string
+        required: false
+        default: "rockcraft.yaml"
+      prune-overrides:
+        description: "Automatically remove satisfied CVE dependency overrides from rockcraft.yaml"
+        type: boolean
+        required: false
+        default: true
+      identity-team-ref:
+        description: "Branch or tag of canonical/identity-team to load the tooling from"
+        type: string
+        required: false
+        default: "main"
+    secrets:
+      PAT_TOKEN:
+        required: false
+      GEMINI_API_KEY:
+        required: false
+      OPENROUTER_CI_KEY:
+        required: false
+
+jobs:
+  analyse:
+    # Pull requests from forks get no secrets and a read-only token.
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout rock repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Fetch upstream upgrade tooling
+        env:
+          IDENTITY_TEAM_REF: ${{ inputs.identity-team-ref }}
+        run: |
+          git clone --quiet --depth=1 --branch "$IDENTITY_TEAM_REF" \
+            https://github.com/canonical/identity-team.git "$RUNNER_TEMP/identity-team"
+
+      - name: Run tooling unit tests
+        run: |
+          python3 -m unittest discover \
+            -s "$RUNNER_TEMP/identity-team/tools/upstream-upgrade/tests" -v
+
+      - name: Analyse the upgrade
+        id: analysis
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CONFIG_PATH: ${{ inputs.config-path }}
+          ROCKCRAFT_PATH: ${{ inputs.rockcraft-path }}
+          PRUNE_OVERRIDES: ${{ inputs.prune-overrides }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_CI_KEY: ${{ secrets.OPENROUTER_CI_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          git fetch --quiet --depth=1 origin "$BASE_SHA"
+          git show "${BASE_SHA}:${ROCKCRAFT_PATH}" > "$RUNNER_TEMP/base-rockcraft.yaml"
+          args=(
+            --config "$CONFIG_PATH"
+            --rockcraft "$ROCKCRAFT_PATH"
+            --from-rockcraft "$RUNNER_TEMP/base-rockcraft.yaml"
+            --out-dir "$RUNNER_TEMP/upgrade"
+          )
+          if [ "$PRUNE_OVERRIDES" = "true" ]; then
+            args+=(--prune-overrides)
+          fi
+          python3 "$RUNNER_TEMP/identity-team/tools/upstream-upgrade/upstream_upgrade.py" "${args[@]}"
+
+      - name: Commit pruned dependency overrides
+        if: ${{ steps.analysis.outputs.pruned == 'true' }}
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          ROCKCRAFT_PATH: ${{ inputs.rockcraft-path }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$ROCKCRAFT_PATH"
+          git commit -m "chore(deps): remove upstreamed CVE dependency overrides"
+          git push origin "HEAD:${HEAD_REF}"
+
+      - name: Comment on the pull request
+        if: ${{ steps.analysis.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          cat "$RUNNER_TEMP/upgrade/pr_comment.md" >> "$GITHUB_STEP_SUMMARY"
+          jq -Rs '{body: .}' "$RUNNER_TEMP/upgrade/pr_comment.md" > "$RUNNER_TEMP/comment.json"
+
+          # Keep one comment per pull request and update it on every push.
+          comments="repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments"
+          existing=$(gh api --paginate "$comments" --jq '
+            .[]
+            | select(.user.login == "github-actions[bot]")
+            | select(.body | startswith("<!-- upstream-upgrade-analysis -->"))
+            | .id' | sed -n 1p)
+          if [ -n "$existing" ]; then
+            gh api --silent --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" \
+              --input "$RUNNER_TEMP/comment.json"
+          else
+            gh api --silent --method POST "$comments" --input "$RUNNER_TEMP/comment.json"
+          fi
