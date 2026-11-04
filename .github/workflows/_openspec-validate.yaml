@@ -1,0 +1,61 @@
+name: OpenSpec Validation (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      drift-config:
+        description: Path to declarative drift-check config
+        required: false
+        default: openspec/drift-checks.yaml
+        type: string
+      validate-target:
+        description: Optional single spec or change id to validate
+        required: false
+        default: ""
+        type: string
+      python-version:
+        description: Python version for the validator toolchain
+        required: false
+        default: "3.13"
+        type: string
+
+jobs:
+  validate:
+    name: OpenSpec Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install openspec-harness
+        run: |
+          pip install "openspec-harness @ git+https://github.com/${{ github.repository_owner }}/identity-team.git@${{ github.ref_name }}#subdirectory=tools/openspec-harness"
+
+      - name: Run strict structural + link validation
+        run: |
+          if [ -n "${{ inputs.validate-target }}" ]; then
+            openspec-validate --workspace . --repo-root . --target "${{ inputs.validate-target }}"
+          else
+            openspec-validate --workspace . --repo-root .
+          fi
+
+      - name: Run declarative code-to-spec drift checks
+        run: |
+          if [ -n "${{ inputs.validate-target }}" ]; then
+            openspec-drift --repo-root . --config "${{ inputs.drift-config }}" --target "${{ inputs.validate-target }}"
+          else
+            openspec-drift --repo-root . --config "${{ inputs.drift-config }}"
+          fi
+
+      - name: Run OpenSpec CLI schema validation
+        run: |
+          if [ -n "${{ inputs.validate-target }}" ]; then
+            npx @fission-ai/openspec validate "${{ inputs.validate-target }}" --strict
+          else
+            npx @fission-ai/openspec validate --all --strict
+          fi

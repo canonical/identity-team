@@ -5,3 +5,9 @@
 .vscode/*
 .history/
 *.vsix
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
