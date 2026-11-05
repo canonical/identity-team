@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openspec-harness"
+version = "0.1.0"
+description = "Config-driven OpenSpec validators and Google harness2 recursive agent harnessing for canonical repositories."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+openspec-validate = "openspec_harness.validation:main"
+openspec-drift = "openspec_harness.drift:main"
+openspec-harness = "openspec_harness.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["harness2*", "openspec_harness*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
