@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.19.0](https://github.com/canonical/identity-team/compare/v1.18.0...v1.19.0) (2026-11-05)
+
+
+### Features
+
+* **openspec:** add shared openspec-harness toolkit and reusable validation workflow ([2dde174](https://github.com/canonical/identity-team/commit/2dde1748f842e6a490d91361aaee7d223caf3e40))
+* **openspec:** add shared openspec-harness toolkit and reusable validation workflow ([#162](https://github.com/canonical/identity-team/issues/162)) ([ffa1acf](https://github.com/canonical/identity-team/commit/ffa1acfaf9885eaa9a115a3d307cbd2c4b44b18e))
+
 ## [1.18.0](https://github.com/canonical/identity-team/compare/v1.17.2...v1.18.0) (2026-10-23)
 
 
