@@ -56,6 +56,11 @@ on:
         type: string
         required: false
         default: "1.32-strict/stable"
+      juju-channels:
+        description: "JSON array of Juju snap channels to test against (e.g. '[\"3.6/stable\", \"4.0/stable\"]')"
+        type: string
+        required: false
+        default: '["3.6/stable"]'
     secrets:
       GH_USERNAME:
         required: false
@@ -78,13 +83,20 @@ jobs:
       - name: Validate node size variable
         if: ${{ !contains(fromJSON('["medium", "large", "xlarge"]'), inputs.node-size) }}
         run: exit 1
+      - name: Validate juju-channels variable
+        run: |
+          echo '${{ inputs.juju-channels }}' | jq -e 'type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' > /dev/null
 
   integration-test:
-    name: Integration Tests (microk8s) (${{ inputs.base }} | ${{ inputs.architecture }})
+    name: Integration Tests (microk8s) (${{ inputs.base }} | ${{ inputs.architecture }}${{ inputs.juju-channels != '["3.6/stable"]' && format(' | {0}', matrix.juju-channel) || '' }})
     runs-on: ${{ fromJSON(format('["self-hosted", "{0}", "{1}", "{2}"]', inputs.architecture, inputs.node-size, inputs.base == '26.04' && 'resolute' || inputs.base == '24.04' && 'noble' || inputs.base == '22.04' && 'jammy' || inputs.base)) }}
     needs:
       - build
       - node-size-validation
+    strategy:
+      fail-fast: false
+      matrix:
+        juju-channel: ${{ fromJson(inputs.juju-channels) }}
     steps:
       - name: Setup tmate session
         uses: canonical/action-tmate@main
@@ -100,10 +112,15 @@ jobs:
       - name: Setup operator environment (microk8s)
         uses: charmed-kubernetes/actions-operator@main
         with:
-          juju-channel: 3.6/stable
+          juju-channel: ${{ matrix.juju-channel }}
           provider: microk8s
           channel: ${{ inputs.k8s-channel }}
           microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
+
+      - name: Log Juju client and controller version
+        run: |
+          juju version
+          juju controllers
 
       - name: Setup Python
         uses: actions/setup-python@v5
