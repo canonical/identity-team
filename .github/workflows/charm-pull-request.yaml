@@ -61,6 +61,11 @@ on:
         type: string
         required: false
         default: "1.32-strict/stable"
+      juju-channels:
+        description: "JSON array of Juju snap channels to test against (e.g. '[\"3.6/stable\", \"4.0/stable\"]')"
+        type: string
+        required: false
+        default: '["3.6/stable"]'
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -142,3 +147,4 @@ jobs:
       architecture: ${{ matrix.architecture }}
       base: ${{ inputs.base }}
       k8s-channel: ${{ inputs.k8s-channel }}
+      juju-channels: ${{ inputs.juju-channels }}
