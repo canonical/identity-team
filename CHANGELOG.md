@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/canonical/identity-team/compare/v1.19.0...v1.19.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* keep juju models for pytest-jubilant integration tests ([e144aca](https://github.com/canonical/identity-team/commit/e144aca5ca5bea33acc4df88b11692878564f108))
+
 ## [1.19.0](https://github.com/canonical/identity-team/compare/v1.18.0...v1.19.0) (2026-11-05)
 
 
