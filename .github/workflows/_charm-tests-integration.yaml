@@ -131,19 +131,26 @@ jobs:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
+          EXTRA_ARGS=""
+          if [ "${{ inputs.pytest-model-option }}" = "--juju-model" ]; then
+            EXTRA_ARGS="--no-juju-teardown"
+          fi
           tox -e "${{ inputs.tox-integration-test-targets }}" \
             --override "testenv:build-prerequisites.base_python=python3" \
             --override "testenv:integration.base_python=python3" \
-            -- ${{ inputs.pytest-model-option }} ${{ inputs.juju-model-name }}
+            -- ${{ inputs.pytest-model-option }} ${{ inputs.juju-model-name }} $EXTRA_ARGS
 
       - name: Resolve actual juju model name
         id: resolve-model
         if: always()
         run: |
-          PREFIX="${{ inputs.juju-model-name }}"
-          # Match exact name (legacy --model) or prefixed name like "testing-abc123" (jubilant 2.0 --juju-model)
-          MODEL=$(juju models --format json | jq -r '.models[]."short-name"' | grep -E "^${PREFIX}(-|$)" | head -1)
-          echo "model=${MODEL:-${PREFIX}}" >> "$GITHUB_OUTPUT"
+          if [ "${{ inputs.pytest-model-option }}" = "--juju-model" ]; then
+            PREFIX="${{ inputs.juju-model-name }}"
+            MODEL=$(juju models --format json | jq -r '.models[]."short-name"' | grep -E "^${PREFIX}-" | tail -1)
+            echo "model=${MODEL:-${PREFIX}}" >> "$GITHUB_OUTPUT"
+          else
+            echo "model=${{ inputs.juju-model-name }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Get contexts
         if: failure()
