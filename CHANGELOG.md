@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.2](https://github.com/canonical/identity-team/compare/v1.19.1...v1.19.2) (2026-11-12)
+
+
+### Bug Fixes
+
+* **deps:** update module maunium.net/go/mautrix to v0.32.0 ([7e8d3a2](https://github.com/canonical/identity-team/commit/7e8d3a2ce9401ef2d283f5aa3a9d7fce4182aa7f))
+
 ## [1.19.1](https://github.com/canonical/identity-team/compare/v1.19.0...v1.19.1) (2026-11-11)
 
 
