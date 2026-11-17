@@ -1,0 +1,183 @@
+name: OpenSpec Drift Detection
+
+on:
+  workflow_call:
+    inputs:
+      default-model:
+        description: Default LLM model identifier for OpenRouter
+        required: false
+        default: "openrouter/deepseek/deepseek-v4-flash"
+        type: string
+    secrets:
+      OPENROUTER_CI_KEY:
+        description: OpenRouter API key for LLM audit
+        required: true
+
+jobs:
+  detect_drift:
+    name: Detect OpenSpec Drift
+    if: |
+      (
+        github.event_name == 'pull_request' &&
+        !github.event.pull_request.draft
+      ) ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        startsWith(github.event.comment.body, '/detect-drift') &&
+        (
+          github.event.comment.author_association == 'MEMBER' ||
+          github.event.comment.author_association == 'OWNER' ||
+          github.event.comment.author_association == 'COLLABORATOR'
+        )
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Parse Model from Trigger
+        id: parse
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body || '' }}
+          DEFAULT_MODEL: ${{ inputs.default-model }}
+        run: |
+          if [[ -n "$COMMENT_BODY" && "$COMMENT_BODY" =~ model=([a-zA-Z0-9._:/-]+) ]]; then
+            echo "MODEL=${BASH_REMATCH[1]}" >> "$GITHUB_ENV"
+          else
+            echo "MODEL=$DEFAULT_MODEL" >> "$GITHUB_ENV"
+          fi
+
+      - name: Guard Merged or Closed PR
+        if: github.event_name == 'issue_comment'
+        id: pr_state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          STATE=$(gh pr view "$PR_NUMBER" --json state --jq .state)
+          echo "state=$STATE" >> "$GITHUB_OUTPUT"
+          if [ "$STATE" != "OPEN" ]; then
+            gh pr comment "$PR_NUMBER" \
+              --body "ℹ️ **OpenSpec Drift Detection**: this PR is ${STATE} — nothing to audit." || true
+          fi
+
+      - name: Checkout Repository
+        if: github.event_name == 'pull_request' || steps.pr_state.outputs.state == 'OPEN'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Checkout PR Branch for ChatOps
+        if: github.event_name == 'issue_comment' && steps.pr_state.outputs.state == 'OPEN'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh pr checkout "$PR_NUMBER"
+
+      - name: Check OpenSpec Adoption
+        if: github.event_name == 'pull_request' || steps.pr_state.outputs.state == 'OPEN'
+        id: check_specs
+        run: |
+          if [ ! -d "openspec/specs" ]; then
+            echo "has_specs=false" >> "$GITHUB_OUTPUT"
+            echo "No openspec/specs directory found. Skipping drift detection."
+          else
+            echo "has_specs=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Harden Git for Read-Only Audit
+        if: steps.check_specs.outputs.has_specs == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config status.showUntrackedFiles no
+
+      - name: Resolve Drift Skill (Centralized with Local Override)
+        if: steps.check_specs.outputs.has_specs == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ -f ".agents/skills/openspec-detect-drift/SKILL.md" ]; then
+            echo "Using local repository drift skill: .agents/skills/openspec-detect-drift/SKILL.md"
+          elif [ -f ".github/skills/openspec-detect-drift/SKILL.md" ]; then
+            echo "Linking local .github/skills/openspec-detect-drift/SKILL.md to .agents/skills/..."
+            mkdir -p .agents/skills/openspec-detect-drift
+            cp .github/skills/openspec-detect-drift/SKILL.md .agents/skills/openspec-detect-drift/SKILL.md
+          elif [ -f ".agent/skills/openspec-detect-drift/SKILL.md" ]; then
+            echo "Linking local .agent/skills/openspec-detect-drift/SKILL.md to .agents/skills/..."
+            mkdir -p .agents/skills/openspec-detect-drift
+            cp .agent/skills/openspec-detect-drift/SKILL.md .agents/skills/openspec-detect-drift/SKILL.md
+          else
+            echo "Fetching canonical drift skill from canonical/identity-team..."
+            mkdir -p .agents/skills/openspec-detect-drift
+            curl -fsSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://raw.githubusercontent.com/${REPO_OWNER}/identity-team/main/.agents/skills/openspec-detect-drift/SKILL.md" \
+              -o .agents/skills/openspec-detect-drift/SKILL.md || \
+            curl -fsSL \
+              "https://raw.githubusercontent.com/canonical/identity-team/main/.agents/skills/openspec-detect-drift/SKILL.md" \
+              -o .agents/skills/openspec-detect-drift/SKILL.md || {
+                echo "Warning: Could not fetch centralized skill. Creating fallback..."
+                sed -e 's/^[ ]*//' << 'EOF' > .agents/skills/openspec-detect-drift/SKILL.md
+                ---
+                name: openspec-detect-drift
+                description: Detect drift between code changes and OpenSpec specs.
+                ---
+                # Detect OpenSpec Drift
+                Audit code diff against openspec/specs/. Identify undocumented behaviors or contradictions.
+                EOF
+              }
+          fi
+
+      - name: Run OpenCode Drift Detection
+        if: steps.check_specs.outputs.has_specs == 'true'
+        uses: anomalyco/opencode/github@77fc88c8ade8e5a620ebbe1197f3a572d29ae91a # latest
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_CI_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          use_github_token: true
+          model: ${{ env.MODEL }}
+          prompt: |
+            Audit this pull request for specification drift against `openspec/specs/`.
+            Execute and follow all instructions, heuristics, and formatting rules defined in `.agents/skills/openspec-detect-drift/SKILL.md`.
+            CRITICAL: Your response MUST begin with the exact anchor tag `<!-- OPENSPEC_DRIFT_REPORT -->` on the first line.
+            CRITICAL: This is a read-only audit. Do NOT create, modify, delete, stage, or commit any files in the repository. Produce the report as your response text only.
+
+      - name: Clean Previous Drift Reports
+        if: steps.check_specs.outputs.has_specs == 'true' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+        run: |
+          TAG_FILTER='(.body | (contains("OPENSPEC_DRIFT_REPORT") or contains("OpenSpec Drift Report")))'
+          COMMENT_IDS=$(gh api --paginate "repos/${REPO}/issues/${PR_NUMBER}/comments" \
+            --jq ".[] | select(${TAG_FILTER}) | .id" || true)
+
+          # Delete all older reports, keeping the latest one just posted
+          OLD_IDS=$(echo "$COMMENT_IDS" | sed '$d')
+
+          for ID in $OLD_IDS; do
+            if [ -n "$ID" ]; then
+              echo "Removing previous drift report comment ID: $ID"
+              gh api --method DELETE "repos/${REPO}/issues/comments/${ID}" || true
+            fi
+          done
+
+      - name: Post Failure Comment
+        if: steps.check_specs.outputs.has_specs == 'true' && failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh pr comment "$PR_NUMBER" \
+            --body "❌ **OpenSpec Drift Detection failed** — this is an infrastructure or audit-execution failure, not a drift verdict. See the [run logs](${RUN_URL})." || true
