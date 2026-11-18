@@ -859,6 +859,7 @@ class MainTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.out = Path(self.tmp.name) / "out"
+        self.config = Path(self.tmp.name) / "upstream-upgrade.yaml"
         self.rockcraft = Path(self.tmp.name) / "rockcraft.yaml"
         self.rockcraft.write_text('name: authentik-server\nversion: "2026.8.3"\n')
         self.previous = Path(self.tmp.name) / "previous.yaml"
@@ -874,7 +875,15 @@ class MainTest(unittest.TestCase):
             self.addCleanup(patcher.stop)
 
     def run_main(self, *args):
-        argv = ["--rockcraft", str(self.rockcraft), "--out-dir", str(self.out), *args]
+        argv = [
+            "--config",
+            str(self.config),
+            "--rockcraft",
+            str(self.rockcraft),
+            "--out-dir",
+            str(self.out),
+            *args,
+        ]
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             return uu.main(argv)
 
