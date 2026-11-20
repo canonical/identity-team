@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 charms=(
+    "authorization-service-operator"
     "glauth-k8s-operator"
     "glauth-utils"
     "hook-service-operator"
