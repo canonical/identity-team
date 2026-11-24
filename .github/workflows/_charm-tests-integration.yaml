@@ -111,14 +111,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Clean up conflicting container runtimes and CNI configs
-        if: ${{ inputs.k8s-distribution == 'k8s' }}
-        run: |
-          sudo apt-get remove --purge -y docker-ce docker-ce-cli containerd.io docker.io containerd 2>/dev/null || true
-          sudo nft flush ruleset 2>/dev/null || true
-          sudo ip link delete docker0 2>/dev/null || true
-          sudo rm -f /etc/cni/net.d/87-podman-bridge.conflist
-
       - name: Setup operator environment with Concierge
         run: |
           sudo snap install --classic concierge
