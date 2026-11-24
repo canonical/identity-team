@@ -51,11 +51,21 @@ on:
         required: false
         default: "22.04"
         type: string
-      k8s-channel:
-        description: "The channel of Charmed Kubernetes or MicroK8s to install"
+      k8s-distribution:
+        description: "The k8s distribution to run integration tests on (one of k8s, microk8s)"
         type: string
         required: false
-        default: "1.32-strict/stable"
+        default: "k8s"
+      k8s-channel:
+        description: "The snap channel of Canonical Kubernetes or MicroK8s to install"
+        type: string
+        required: false
+        default: "1.32-classic/stable"
+      juju-channels:
+        description: "JSON-formatted list of Juju snap channels to run integration tests on"
+        type: string
+        required: false
+        default: '["3.6/stable", "4.0/stable"]'
     secrets:
       GH_USERNAME:
         required: false
@@ -80,11 +90,15 @@ jobs:
         run: exit 1
 
   integration-test:
-    name: Integration Tests (microk8s) (${{ inputs.base }} | ${{ inputs.architecture }})
+    name: Integration Tests (${{ inputs.k8s-distribution }} | juju ${{ matrix.juju-channel }} | ${{ inputs.base }} | ${{ inputs.architecture }})
     runs-on: ${{ fromJSON(format('["self-hosted", "{0}", "{1}", "{2}"]', inputs.architecture, inputs.node-size, inputs.base == '26.04' && 'resolute' || inputs.base == '24.04' && 'noble' || inputs.base == '22.04' && 'jammy' || inputs.base)) }}
     needs:
       - build
       - node-size-validation
+    strategy:
+      fail-fast: false
+      matrix:
+        juju-channel: ${{ fromJSON(inputs.juju-channels) }}
     steps:
       - name: Setup tmate session
         uses: canonical/action-tmate@baddea442daf5926b58746bfb44e2e06afd45401 # main
@@ -97,13 +111,71 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Setup operator environment (microk8s)
-        uses: charmed-kubernetes/actions-operator@d8217ad61c15f746727a9d41563c13e9b9fe56e3 # main
-        with:
-          juju-channel: 3.6/stable
-          provider: microk8s
-          channel: ${{ inputs.k8s-channel }}
-          microk8s-addons: "dns hostpath-storage metallb:10.64.140.43-10.64.140.49"
+      - name: Clean up conflicting container runtimes and CNI configs
+        if: ${{ inputs.k8s-distribution == 'k8s' }}
+        run: |
+          sudo apt-get remove --purge -y docker-ce docker-ce-cli containerd.io docker.io containerd 2>/dev/null || true
+          sudo nft flush ruleset 2>/dev/null || true
+          sudo ip link delete docker0 2>/dev/null || true
+          sudo rm -f /etc/cni/net.d/87-podman-bridge.conflist
+
+      - name: Setup operator environment with Concierge
+        run: |
+          sudo snap install --classic concierge
+          K8S_CHANNEL="${{ inputs.k8s-channel }}"
+          if [ "${{ inputs.k8s-distribution }}" = "microk8s" ] && [ "$K8S_CHANNEL" = "1.32-classic/stable" ]; then
+            K8S_CHANNEL="1.32-strict/stable"
+          fi
+          cat << EOF > /tmp/concierge.yaml
+          juju:
+            channel: ${{ matrix.juju-channel }}
+            model-defaults:
+              test-mode: "true"
+              automatically-retry-hooks: "false"
+              logging-config: "<root>=INFO;unit=DEBUG"
+          providers:
+            k8s:
+              enable: ${{ inputs.k8s-distribution == 'k8s' }}
+              bootstrap: ${{ inputs.k8s-distribution == 'k8s' }}
+              channel: ${K8S_CHANNEL}
+              features:
+                local-storage: {}
+                load-balancer:
+                  l2-mode: "true"
+                  cidrs: "10.64.140.43-10.64.140.49"
+              bootstrap-constraints:
+                root-disk: 4G
+            microk8s:
+              enable: ${{ inputs.k8s-distribution == 'microk8s' }}
+              bootstrap: ${{ inputs.k8s-distribution == 'microk8s' }}
+              channel: ${K8S_CHANNEL}
+              addons:
+                - dns
+                - hostpath-storage
+                - metallb:10.64.140.43-10.64.140.49
+          host:
+            packages:
+              - jq
+            snaps:
+              yq:
+                channel: latest/stable
+              juju-crashdump:
+                channel: latest/stable
+          EOF
+          sudo concierge prepare --trace -c /tmp/concierge.yaml
+
+      - name: Wait for Canonical K8s system rollouts
+        if: ${{ inputs.k8s-distribution == 'k8s' }}
+        run: |
+          for res in deployment/cilium-operator deployment/coredns daemonset/cilium daemonset/ck-storage-rawfile-csi-node statefulset/ck-storage-rawfile-csi-controller; do
+            if kubectl -n kube-system get "$res" >/dev/null 2>&1; then
+              kubectl -n kube-system rollout status "$res" --timeout=5m
+            fi
+          done
+
+      - name: Ensure target Juju model exists
+        if: ${{ inputs.pytest-model-option == '--model' && inputs.juju-model-name != 'testing' }}
+        run: juju add-model "${{ inputs.juju-model-name }}" || juju switch "${{ inputs.juju-model-name }}"
 
       - name: Setup Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -111,7 +183,7 @@ jobs:
           python-version: ${{ inputs.base == '26.04' && '3.14' || inputs.base == '24.04' && '3.12' || '3.10' }}
 
       - name: Install test dependencies
-        run: python3 -m pip install tox
+        run: python3 -m pip install tox tox-uv uv
 
       - name: Get charm info
         id: get-charm-info

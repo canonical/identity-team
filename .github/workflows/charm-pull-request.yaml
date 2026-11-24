@@ -56,11 +56,21 @@ on:
         required: false
         default: "22.04"
         type: string
-      k8s-channel:
-        description: "The channel of Charmed Kubernetes or MicroK8s to install"
+      k8s-distribution:
+        description: "The k8s distribution to run integration tests on (one of k8s, microk8s)"
         type: string
         required: false
-        default: "1.32-strict/stable"
+        default: "k8s"
+      k8s-channel:
+        description: "The snap channel of Canonical Kubernetes or MicroK8s to install"
+        type: string
+        required: false
+        default: "1.32-classic/stable"
+      juju-channels:
+        description: "JSON-formatted list of Juju snap channels to run integration tests on"
+        type: string
+        required: false
+        default: '["3.6/stable", "4.0/stable"]'
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: false
@@ -141,4 +151,6 @@ jobs:
       debug-enabled: ${{ inputs.debug-enabled }}
       architecture: ${{ matrix.architecture }}
       base: ${{ inputs.base }}
+      k8s-distribution: ${{ inputs.k8s-distribution }}
       k8s-channel: ${{ inputs.k8s-channel }}
+      juju-channels: ${{ inputs.juju-channels }}
