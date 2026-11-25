@@ -17,11 +17,25 @@ on:
         required: false
         default: true
         description: "Whether to also tag image as stable"
+      target-repository:
+        type: string
+        required: false
+        default: ""
+        description: "Target GHCR repository (<owner>/<image-name>); defaults to github.repository"
+      promote-latest:
+        type: boolean
+        required: false
+        default: false
+        description: "Whether to also tag image as latest"
       mark-latest:
         type: boolean
         required: false
         default: true
         description: "Whether to mark the GitHub release as latest"
+    outputs:
+      image:
+        description: "promoted container image"
+        value: ${{ jobs.promote.outputs.image }}
 
 jobs:
   promote:
@@ -29,27 +43,38 @@ jobs:
       packages: write
       contents: write
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.promote.outputs.image }}
     steps:
       - name: Install Rockcraft for Skopeo
         run: sudo snap install --classic --channel latest/stable rockcraft
 
       - name: Promote image tags via Skopeo
+        id: promote
         run: |
+          repo="${{ inputs.target-repository }}"
+          if [ -z "$repo" ]; then
+            repo="${{ github.repository }}"
+          fi
           source_image="docker://${{ inputs.candidate-image }}"
           target_tags=("${{ inputs.release-tag }}")
           if [ "${{ inputs.promote-stable }}" = "true" ]; then
             target_tags+=("stable")
           fi
+          if [ "${{ inputs.promote-latest }}" = "true" ]; then
+            target_tags+=("latest")
+          fi
 
           for tag in "${target_tags[@]}"; do
-            echo "Promoting to ghcr.io/${{ github.repository }}:${tag}..."
+            echo "Promoting to ghcr.io/${repo}:${tag}..."
             sudo rockcraft.skopeo --insecure-policy copy --all \
               --src-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
               --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}" \
               "$source_image" \
-              "docker://ghcr.io/${{ github.repository }}:${tag}"
+              "docker://ghcr.io/${repo}:${tag}"
           done
 
+          echo "image=ghcr.io/${repo}:${{ inputs.release-tag }}" >> "$GITHUB_OUTPUT"
       - name: Graduate GitHub Release from pre-release to stable
         run: |
           if gh release view "${{ inputs.release-tag }}" >/dev/null 2>&1; then
