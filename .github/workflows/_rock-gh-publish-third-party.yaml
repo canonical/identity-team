@@ -9,10 +9,21 @@ on:
         required: false
         default: ""
         description: "Specific rock artifact to download. If empty, all rocks in the run will be downloaded and published as a multi-arch image."
+      candidate:
+        type: boolean
+        required: false
+        default: false
+        description: "When true, publish as <version>-candidate and <sha> instead of latest/stable/<version>."
     outputs:
       image:
         description: "container image"
         value: ${{ jobs.publish.outputs.image }}
+      image-name:
+        description: "container image name"
+        value: ${{ jobs.publish.outputs.image-name }}
+      version:
+        description: "container image version"
+        value: ${{ jobs.publish.outputs.version }}
 
 jobs:
   publish:
@@ -22,6 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.set.outputs.image }}
+      image-name: ${{ steps.set.outputs.image-name }}
+      version: ${{ steps.set.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -44,10 +57,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload ROCK to ghcr.io (latest or stable)
+      - name: Upload ROCK to ghcr.io (candidate or latest/stable)
         run: |
           image_tag=$(yq -r '.version' rockcraft.yaml)
-          versions=(latest "${{ github.sha }}" stable "$image_tag")
+          if [ "${{ inputs.candidate }}" = "true" ]; then
+            versions=("${image_tag}-candidate" "${{ github.sha }}")
+            published_tag="${image_tag}-candidate"
+          else
+            versions=(latest "${{ github.sha }}" stable "$image_tag")
+            published_tag="$image_tag"
+          fi
           mapfile -t rocks < <(find . -name "*.rock" -type f)
 
           if [ ${#rocks[@]} -eq 0 ]; then
@@ -86,8 +105,13 @@ jobs:
             done
           fi
 
-          echo "image=ghcr.io/${{ github.repository_owner }}/$image_name:$image_tag" >> "$GITHUB_ENV"
+          echo "image=ghcr.io/${{ github.repository_owner }}/$image_name:${published_tag}" >> "$GITHUB_ENV"
+          echo "image_name=$image_name" >> "$GITHUB_ENV"
+          echo "image_version=$image_tag" >> "$GITHUB_ENV"
 
       - name: Set output of image
         id: set
-        run: echo "image=$image" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "image-name=$image_name" >> "$GITHUB_OUTPUT"
+          echo "version=$image_version" >> "$GITHUB_OUTPUT"
