@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.0](https://github.com/canonical/identity-team/compare/v1.19.2...v1.20.0) (2026-11-25)
+
+
+### Features
+
+* add candidate quarantine and target promotion to rock workflows ([8b6f0f3](https://github.com/canonical/identity-team/commit/8b6f0f34ecef0168e0d636f2e02e2510a4ec8dea))
+* add openspec-related reusable workflows ([4dd81a7](https://github.com/canonical/identity-team/commit/4dd81a7f911cc455ac358f896906f081f9972333))
+
 ## [1.19.2](https://github.com/canonical/identity-team/compare/v1.19.1...v1.19.2) (2026-11-12)
 
 
