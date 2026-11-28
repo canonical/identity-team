@@ -29,7 +29,7 @@ jobs:
 
       - name: Create pull request
         id: create-pull-request
-        uses: canonical/create-pull-request@08500bb7c59122ae2d546dcdf28242dfa836a822 # main
+        uses: canonical/create-pull-request@c0e50941c34bb3bd608000899dbd7fac94c0efcf # main
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           commit-message: 'fix: update charm dependent libs'
